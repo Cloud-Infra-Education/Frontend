@@ -1,0 +1,47 @@
+name: CI - Build & Deploy Frontend to S3
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+env:
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+    #  S3_BUCKET: ${{ secrets.FRONTEND_S3_BUCKET }}
+  S3_BUCKET: chan-made-this-bucket
+  BUILD_DIR: dist
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Upload to S3 (sync)
+        run: |
+          echo "Deploying ${BUILD_DIR} -> s3://${S3_BUCKET}"
+          aws s3 sync "${BUILD_DIR}" "s3://${S3_BUCKET}" --delete
+

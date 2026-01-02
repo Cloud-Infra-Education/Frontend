@@ -137,3 +137,20 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+
+# Vite / bundlers local cache
+.vite/
+
+# Mac / Windows junk
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# local certificates (가끔 dev에 씀)
+*.pem
+*.key
+
