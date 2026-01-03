@@ -11,7 +11,7 @@ permissions:
 env:
   AWS_REGION: ${{ secrets.AWS_REGION }}
     #  S3_BUCKET: ${{ secrets.FRONTEND_S3_BUCKET }}
-  S3_BUCKET: chan-made-this-bucket
+  S3_BUCKET: team-formation-lap-origin-s3
   BUILD_DIR: dist
 
 jobs:
