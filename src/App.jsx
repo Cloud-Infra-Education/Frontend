@@ -1,28 +1,49 @@
-import React, { useMemo, useState } from "react";
+import React from "react";
 
 export default function App() {
-  const buildTime = useMemo(() => new Date().toISOString(), []);
-  const [count, setCount] = useState(0);
-
   return (
-    <main className="page">
-      <section className="card">
-        <h1 className="title">S3 배포 테스트용 프론트엔드</h1>
-        <p className="text">
-          이 페이지는 GitHub Actions에서 자동 빌드된 뒤 S3로 업로드된다.
-        </p>
-        <div className="row">
-          <button className="btn" onClick={() => setCount((c) => c + 1)}>
-            클릭
-          </button>
-          <span className="pill">count: {count}</span>
+    <div className="app">
+      <section className="hero-section">
+        <header className="hero-header">
+          <div className="logo">
+            <div className="logo-symbol" aria-hidden="true" />
+            K-DEFENSE TECH
+          </div>
+
+          <nav className="hero-nav" aria-label="Primary">
+            <a href="#who">Who We Are</a>
+            <a href="#why">Why We Exist</a>
+            <a href="#what">What We Do</a>
+            <a href="#media">Media</a>
+            <a href="#careers">Careers</a>
+          </nav>
+
+          <div className="header-right">
+            <span className="lang">KR/EN</span>
+            <button className="menu-btn" type="button" aria-label="Open menu">
+              ☰
+            </button>
+          </div>
+        </header>
+
+        <div className="bottom-content">
+          <h1 className="main-slogan">
+            The innovating pioneer for
+            <br />
+            a sustainable tomorrow
+          </h1>
+          <div className="bottom-bar" aria-hidden="true" />
         </div>
-        <div className="meta">
-          <div>buildTime: {buildTime}</div>
-          <div>nodeEnv: {import.meta.env.MODE}</div>
-        </div>
+
+
+	 	  	  	  
+        <a className="scroll-down" href="#who" aria-label="Scroll down">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z" />
+          </svg>
+        </a>
       </section>
-    </main>
+    </div>
   );
 }
 
