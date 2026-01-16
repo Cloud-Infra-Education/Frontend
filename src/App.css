@@ -1,0 +1,149 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700;900&display=swap');
+
+/* === [강제 삭제] 로고 주변의 가상 아이콘(< > 등) 및 불필요한 요소 영구 제거 === */
+.logo::before, .logo::after, 
+.header-left::before, .header-left::after,
+.ott-header::before, .ott-header::after {
+    display: none !important;
+    content: none !important;
+}
+
+/* === 1. 전역 초기화 및 레이아웃 === */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  margin: 0;
+  background-color: #040714; /* 이 깊은 남색 배경과 어울리게 변경합니다 */
+  color: #f9f9f9;
+  font-family: 'Noto Sans KR', sans-serif;
+  overflow-x: hidden;
+}
+
+.container { padding: 0 4%; width: 100%; }
+
+/* === 2. Formation+ 전용 인트로 === */
+.netflix-intro {
+  position: fixed; inset: 0; background: #000;
+  display: flex; justify-content: center; align-items: center; z-index: 10000;
+}
+.logo-zoom {
+  font-size: 5rem; font-weight: 900; letter-spacing: -2px;
+  background: linear-gradient(to bottom, #fff 50%, #888 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  animation: formationZoom 2s ease-in-out forwards;
+}
+@keyframes formationZoom {
+  0% { transform: scale(0.8); opacity: 0; }
+  40% { opacity: 1; }
+  100% { transform: scale(12); opacity: 0; }
+}
+
+/* === 3. 헤더 UI (수민님의 청정 디자인 유지) === */
+.ott-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 4%; height: 72px; position: fixed; width: 100%; top: 0; z-index: 1000;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
+  transition: background 0.4s;
+}
+.ott-header.scrolled { background: #090b13; }
+.logo { font-size: 1.8rem; font-weight: 900; color: #fff; cursor: pointer; flex-shrink: 0; }
+
+.header-right {
+  display: flex; align-items: center; justify-content: flex-end;
+  gap: 20px; flex-shrink: 0;
+}
+
+.region-tag {
+  font-size: 0.7rem; font-weight: 900; color: #00d4ff; border: 1px solid #00d4ff;
+  padding: 3px 8px; border-radius: 2px; background: rgba(0, 212, 255, 0.1);
+}
+
+/* === 4. 넷플릭스 스타일 프로필 드롭다운 === */
+.profile-menu-wrapper { position: relative; }
+.profile-trigger { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+
+/* [수정] 프로필 아이콘 스타일 변경 */
+.profile-icon-box {
+  width: 32px; height: 32px;
+  
+  /* 1. 색상 변경: 딥 스카이 블루 (남색 배경과 잘 어울림) */
+  background: #0077cc; 
+  
+  /* 2. 모양 변경: 사각형(4px) -> 동그라미(50%) */
+  border-radius: 50%; 
+  
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 900; color: #fff; font-size: 0.8rem;
+  transition: background 0.3s; /* 부드러운 색상 전환 효과 */
+}
+
+/* 마우스 올렸을 때 살짝 밝아지는 효과 추가 */
+.profile-trigger:hover .profile-icon-box {
+    background: #0088ee;
+}
+
+
+.dropdown-arrow {
+  border: 5px solid transparent; border-top-color: #fff; margin-top: 5px;
+  transition: transform 0.3s;
+}
+.profile-menu-wrapper.open .dropdown-arrow { transform: rotate(180deg); }
+
+.profile-dropdown {
+  position: absolute; top: 50px; right: 0; width: 220px;
+  background: rgba(0, 0, 0, 0.95); border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 4px; padding: 15px 0; box-shadow: 0 10px 20px rgba(0,0,0,0.8);
+  z-index: 2000;
+}
+
+.dropdown-info-row {
+    padding: 0 20px 10px;
+    font-size: 0.75rem;
+    display: flex; flex-direction: column; gap: 4px;
+}
+.info-label { color: #888; margin-right: 5px; }
+.info-value { color: #fff; font-weight: 700; }
+
+.dropdown-item {
+  padding: 12px 20px; font-size: 0.85rem; color: #e5e5e5; cursor: pointer;
+  transition: 0.2s;
+}
+.dropdown-item:hover { background: rgba(255, 255, 255, 0.1); color: #fff; text-decoration: underline; }
+.dropdown-divider { height: 1px; background: rgba(255, 255, 255, 0.1); margin: 10px 0; }
+
+/* === 5. 히어로 슬라이더 & 그리드 === */
+.hero-container { position: relative; width: 100%; height: 85vh; margin-bottom: 40px; overflow: hidden; }
+.hero-slider-wrapper { display: grid; width: 100%; height: 100%; }
+.hero-slide { grid-area: 1 / 1; height: 100%; background-size: cover; background-position: center; position: relative; opacity: 0; transition: opacity 1.2s ease-in-out; }
+.hero-slide.active { opacity: 1; }
+.hero-overlay { position: absolute; inset: 0; background: linear-gradient(to right, rgba(4, 7, 20, 0.9) 10%, transparent 70%), linear-gradient(to top, rgba(4, 7, 20, 1) 0%, transparent 35%); display: flex; align-items: center; padding: 0 4%; }
+.hero-title { font-size: 3.5rem; font-weight: 900; margin-bottom: 15px; }
+.nav-arrow { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.5); color: #fff; border: none; padding: 20px 10px; cursor: pointer; z-index: 10; font-size: 2rem; }
+.arrow-left { left: 0; } .arrow-right { right: 0; }
+
+.search-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
+.search-card { aspect-ratio: 16/9; border-radius: 6px; background-size: cover; cursor: pointer; transition: 0.3s; border: 1px solid rgba(255,255,255,0.1); }
+.search-card:hover { transform: scale(1.05); border-color: #fff; }
+.like-button-modal {
+    background: none;
+    border: 1px solid rgba(255,255,255,0.3);
+    color: #fff;
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: 0.3s;
+}
+
+.like-button-modal:hover {
+    background: rgba(255,255,255,0.1);
+    border-color: #fff;
+}
+
+.like-button-modal.active {
+    color: #e50914; /* 빨간색 하트 */
+    border-color: #e50914;
+}
