@@ -1,0 +1,60 @@
+# Formation+ Frontend 프로젝트 컨텍스트
+
+## 프로젝트 개요
+- OTT 플랫폼 프론트엔드 (React + Vite)
+- Backend API: https://api.exampleott.click/api/v1
+- 디즈니 플러스 스타일 UI 적용
+
+## 주요 작업 완료 내역 (2026-01-17)
+
+### 1. 디즈니 플러스 스타일 UI 개선
+- Hero 섹션: 자동 슬라이더 (5초마다), 3D 입체감, 둥근 창 느낌
+- 로그인 화면: 메인 테마 색상 통일 (하늘색/파란색), 로고 추가, 가운데 정렬
+- 검색 화면: 카테고리별 가로 스크롤 행 구성
+- 메인 화면: "시청 중인 콘텐츠", "추천" 카테고리별 가로 스크롤 행
+- Play/Info 버튼: 디즈니 플러스 스타일 적용
+
+### 2. Backend API 연동 완료
+- 인증: `/auth/register`, `/auth/login`
+- 컨텐츠: `/contents`, `/contents/{id}/video-assets/s3/list`
+- 시청 기록: `/watch-history`, `/watch-history/{content_id}`
+- 좋아요: `/contents/{id}/likes` (POST/DELETE)
+- 검색: `/search?q={query}`
+
+### 3. CI/CD 파이프라인
+- GitHub Actions 워크플로우: `.github/workflows/ci.yml`
+- Trivy 보안 스캔
+- S3 업로드
+- CloudFront 캐시 무효화
+
+### 4. 디자인 시스템
+- 메인 배경: `#040714` (깊은 남색)
+- 액센트 색상: `#00d4ff` (하늘색), `#0077cc` (파란색)
+- 둥근 모서리: `border-radius: 8px~20px`
+
+### 5. 이어보기 기능
+- `watch_history.last_played_time` 사용
+- Backend API의 시청 기록을 우선 사용 (localStorage 백업)
+- 5초 이상 시청 시 이어보기 다이얼로그 표시
+
+## 중요한 파일 구조
+- `src/App.jsx`: 메인 앱 로직, API 호출
+- `src/components/LoginOverlay.jsx`: 로그인/회원가입
+- `src/components/SmartPlayer.jsx`: 비디오 플레이어 (video.js 사용)
+- `src/components/ContentModal.jsx`: 컨텐츠 상세 모달
+- `src/App.css`: 디즈니 플러스 스타일 CSS
+
+## GitHub 저장소
+- URL: https://github.com/Cloud-Infra-Education/Frontend
+- 브랜치: `feat/#1`, `main`
+- CI/CD: 자동 배포 활성화
+
+## 알려진 이슈/참고사항
+- 이어보기 기능: `last_played_time` 값이 Backend에서 정확히 전달되어야 함
+- 디자인 확인용: "디자인 확인하기" 버튼 (BYPASS 모드)
+- 시청 기록 저장: 10초마다 자동 저장
+
+## 스타일 가이드
+- 모든 버튼: 둥근 모서리, 호버 시 확대 효과
+- 가로 스크롤 행: `overflow-x: auto`, 스크롤바 숨김
+- 썸네일: 호버 시 확대 및 상승 (`scale(1.08) translateY(-8px)`)
