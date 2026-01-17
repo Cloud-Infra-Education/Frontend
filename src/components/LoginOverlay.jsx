@@ -4,7 +4,7 @@ import "./LoginOverlay.css";
 // [명세서 반영] 프로덕션 API 주소
 const API_BASE_URL = "https://api.exampleott.click/api/v1"; 
 
-export default function LoginOverlay({ onLogin, isLoading }) {
+export default function LoginOverlay({ onLogin, isLoading, onBypass }) {
   const [isRegisterMode, setIsRegisterMode] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -58,7 +58,21 @@ export default function LoginOverlay({ onLogin, isLoading }) {
   return (
     <div className="login-overlay">
       <div className="login-container">
-        <h1 className="login-logo">Formation+</h1>
+        <div className="login-logo-wrapper">
+          <img 
+            src="/logo.png" 
+            alt="Formation+" 
+            className="login-logo-image"
+            onError={(e) => {
+              e.target.style.display = 'none';
+              e.target.nextSibling.style.display = 'flex';
+            }}
+          />
+          <div className="login-logo-icon" style={{ display: 'none' }}>
+            <div className="logo-play"></div>
+          </div>
+          <h1 className="login-service-name">Formation+</h1>
+        </div>
         <form className="login-form" onSubmit={handleSubmit}>
           <h2>{isRegisterMode ? "회원가입" : "로그인"}</h2>
           
@@ -83,6 +97,17 @@ export default function LoginOverlay({ onLogin, isLoading }) {
             {isRegisterMode ? "로그인하러 가기" : "지금 가입하세요."}
           </p>
         </div>
+        
+        {onBypass && (
+          <button 
+            type="button" 
+            className="login-bypass-btn" 
+            onClick={onBypass}
+            title="서버 연결 없이 디자인 확인"
+          >
+            디자인 확인하기
+          </button>
+        )}
       </div>
     </div>
   );

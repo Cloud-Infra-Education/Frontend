@@ -14,6 +14,7 @@ env:
   AWS_REGION: ${{ secrets.AWS_REGION }}
   S3_BUCKET: team-formation-lap-origin-s3
   BUILD_DIR: dist
+  CLOUDFRONT_DISTRIBUTION_ID: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}
 
 jobs:
   build-and-deploy:
@@ -54,3 +55,19 @@ jobs:
         run: |
           echo "Deploying ${BUILD_DIR} -> s3://${S3_BUCKET}"
           aws s3 sync "${BUILD_DIR}" "s3://${S3_BUCKET}" --delete
+
+      - name: Invalidate CloudFront cache
+        if: env.CLOUDFRONT_DISTRIBUTION_ID != ''
+        run: |
+          echo "Invalidating CloudFront distribution: ${CLOUDFRONT_DISTRIBUTION_ID}"
+          INVALIDATION_ID=$(aws cloudfront create-invalidation \
+            --distribution-id ${CLOUDFRONT_DISTRIBUTION_ID} \
+            --paths "/*" \
+            --query 'Invalidation.Id' \
+            --output text)
+          echo "CloudFront invalidation created: ${INVALIDATION_ID}"
+          echo "Waiting for invalidation to complete..."
+          aws cloudfront wait invalidation-completed \
+            --distribution-id ${CLOUDFRONT_DISTRIBUTION_ID} \
+            --id ${INVALIDATION_ID}
+          echo "✅ CloudFront cache invalidation completed!"
