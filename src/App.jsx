@@ -1,49 +1,855 @@
-import React from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { useTranslation } from 'react-i18next';
+import SmartPlayer from "./components/SmartPlayer";
+import ContentModal from "./components/ContentModal";
+import LoginOverlay from "./components/LoginOverlay";
+import "./App.css";
+
+// === 1. 아이콘 설정 (수민님 디자인 유지) ===
+const Icons = {
+  Search: () => (
+    <svg viewBox="0 0 24 24" fill="currentColor" width="20">
+      <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+    </svg>
+  ),
+};
+
+const API_BASE_URL = "https://api.exampleott.click/api/v1";
+const REGION_MAP = { "KR": "SEOUL EDGE", "US": "OREGON EDGE" };
 
 export default function App() {
+  const { t, i18n } = useTranslation();
+  const [token, setToken] = useState(localStorage.getItem("accessToken"));
+  const [userData, setUserData] = useState(null); 
+  const [movies, setMovies] = useState([]);
+  const [watchHistory, setWatchHistory] = useState([]); // 시청 기록 데이터
+  const [isIntro, setIsIntro] = useState(true); // 초기값 true로 복원
+  const hasShownIntroRef = useRef(false); // 인트로를 이미 표시했는지 추적
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [userRegion, setUserRegion] = useState("DETECTING...");
+  const [currentIdx, setCurrentIdx] = useState(0);
+  const [selectedMovie, setSelectedMovie] = useState(null);
+  const [theater, setTheater] = useState(false);
+  const [activeVideoUrl, setActiveVideoUrl] = useState("");
+  const [likedContents, setLikedContents] = useState(new Set()); // 좋아요한 콘텐츠 ID 추적
+  const [isSearchMode, setIsSearchMode] = useState(false); // 검색 모드
+  const [searchQuery, setSearchQuery] = useState(''); // 검색어
+  const [searchResults, setSearchResults] = useState([]); // 검색 결과
+  const [isSearching, setIsSearching] = useState(false); // 검색 중 상태
+  const dropdownRef = useRef(null);
+
+  const displayMovies = movies.length > 0 ? movies : [
+    { id: 't1', title: 'Formation+ 프리미엄', description: '수민님의 모든 요청이 반영된 최종 버전입니다.', thumbnail_url: 'https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?w=1200', age_rating: '15+', meta: '2026 • SF' }
+  ];
+
+  // === 토큰 만료 체크 및 처리 ===
+  const handleTokenExpired = () => {
+    console.warn("[Token] 토큰이 만료되었습니다. 로그아웃 처리합니다.");
+    localStorage.removeItem("accessToken");
+    setToken(null);
+    alert("세션이 만료되었습니다. 다시 로그인해주세요.");
+    window.location.reload();
+  };
+
+  // === API 응답에서 토큰 만료 체크 ===
+  const checkTokenExpired = async (response) => {
+    if (response.status === 401) {
+      const errorText = await response.text();
+      if (errorText.includes("expired") || errorText.includes("Invalid token") || errorText.includes("Signature has expired")) {
+        handleTokenExpired();
+        return true;
+      }
+    }
+    return false;
+  };
+
+  // === [기능 추가] 모든 테이블 데이터 통합 연동 ===
+  const initializeData = useCallback(async () => {
+    if (!token || token === "bypass_success_token") return;
+    try {
+      const headers = { "Authorization": `Bearer ${token}` };
+      const [contentsRes, userRes, historyRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/contents`, { headers }),
+        fetch(`${API_BASE_URL}/users/me`, { headers }),
+        fetch(`${API_BASE_URL}/watch-history`, { headers })
+      ]);
+      
+      if (contentsRes.ok) {
+        const contentsData = await contentsRes.json();
+        console.log(`[Initialize] 콘텐츠 목록 로드:`, contentsData.length, "개");
+        
+        // 좋아요 상태 업데이트 (selectedMovie와 동기화)
+        const updatedMovies = contentsData.map(m => ({
+          ...m,
+          is_liked: likedContents.has(m.id)
+        }));
+        setMovies(updatedMovies);
+        
+        // selectedMovie도 업데이트
+        if (selectedMovie) {
+          const updatedMovie = updatedMovies.find(m => m.id === selectedMovie.id);
+          if (updatedMovie) {
+            setSelectedMovie(prev => ({
+              ...updatedMovie,
+              is_liked: likedContents.has(updatedMovie.id)
+            }));
+          }
+        }
+      } else {
+        if (await checkTokenExpired(contentsRes)) return;
+        console.error(`[Initialize] 콘텐츠 목록 로드 실패:`, contentsRes.status, await contentsRes.text());
+      }
+      
+      if (userRes.ok) {
+        const data = await userRes.json();
+        console.log(`[Initialize] 사용자 정보:`, data);
+        setUserData(data);
+        setUserRegion(REGION_MAP[data.region_code] || "GLOBAL EDGE");
+      } else {
+        if (await checkTokenExpired(userRes)) return;
+        console.error(`[Initialize] 사용자 정보 로드 실패:`, userRes.status);
+      }
+      
+      if (historyRes.ok) {
+        const historyData = await historyRes.json();
+        console.log(`[Initialize] 시청 기록 로드:`, historyData.length, "개");
+        setWatchHistory(historyData);
+      } else {
+        if (await checkTokenExpired(historyRes)) return;
+        console.error(`[Initialize] 시청 기록 로드 실패:`, historyRes.status);
+      }
+    } catch (err) { 
+      console.error("[Initialize] 데이터 동기화 실패:", err);
+    }
+  }, [token, likedContents]);
+
+  // === [기능 추가] 좋아요 API 연동 ===
+  const handleToggleLike = async (movie) => {
+    if (!movie || !movie.id) {
+      console.error("[Like] 유효하지 않은 영화 정보");
+      return;
+    }
+    
+    try {
+      const headers = { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" };
+      
+      // 좋아요 목록 조회 (현재 상태 확인)
+      const checkRes = await fetch(`${API_BASE_URL}/contents/${movie.id}/likes`, { headers });
+      
+      let likesList = [];
+      let currentLikeCount = movie.like_count || 0;
+      
+      if (checkRes.ok) {
+        try {
+          likesList = await checkRes.json();
+          // 좋아요 목록의 개수로 현재 상태 추정
+          // 참고: user_id 매칭은 불가능하지만, 목록 개수를 활용할 수 있습니다
+        } catch (e) {
+          console.warn("[Like] 좋아요 목록 파싱 실패:", e);
+        }
+      }
+
+      // 좋아요 상태 추정: 좋아요 목록의 개수와 현재 콘텐츠의 like_count를 비교
+      // 좋아요 목록에 항목이 있고, like_count가 목록 개수 이상이면 이미 좋아요 상태일 가능성이 높음
+      // 하지만 다른 사용자의 좋아요도 있을 수 있으므로, 정확하지 않을 수 있습니다
+      const isLikelyLiked = likesList.length > 0 && currentLikeCount >= likesList.length;
+      
+      // 첫 번째 방법 시도: 추정된 상태에 따라 POST/DELETE 선택
+      // (정확하지 않으므로 실패 시 반대 시도)
+      let method = isLikelyLiked ? "DELETE" : "POST";
+      console.log(`[Like] 좋아요 토글: content_id=${movie.id} (${isLikelyLiked ? '취소' : '추가'} 시도)`);
+      
+      let res = await fetch(`${API_BASE_URL}/contents/${movie.id}/likes`, { 
+        method, 
+        headers 
+      });
+      
+      if (!res.ok) {
+        // 토큰 만료 체크
+        if (await checkTokenExpired(res)) return;
+        
+        // 400 에러 (POST 시도) 또는 404 에러 (DELETE 시도)인 경우 반대 시도
+        if ((res.status === 400 && method === "POST") || (res.status === 404 && method === "DELETE")) {
+          // 반대 메서드로 재시도
+          const oppositeMethod = method === "POST" ? "DELETE" : "POST";
+          console.log(`[Like] ${method} 실패 → ${oppositeMethod} 재시도`);
+          
+          res = await fetch(`${API_BASE_URL}/contents/${movie.id}/likes`, { 
+            method: oppositeMethod, 
+            headers 
+          });
+          
+          if (!res.ok) {
+            // 토큰 만료 체크
+            if (await checkTokenExpired(res)) return;
+            const errorText = await res.text();
+            console.error(`[Like] 좋아요 처리 실패 (${res.status})`);
+            if (res.status !== 400 && res.status !== 404) {
+              alert(`좋아요 처리 실패: ${errorText}`);
+            }
+          } else {
+            console.log(`[Like] ✅ 좋아요 ${oppositeMethod === "POST" ? "추가" : "취소"} 완료`);
+            
+            // 로컬 상태 업데이트 (즉시 UI 반영)
+            if (oppositeMethod === "POST") {
+              // 좋아요 추가
+              setLikedContents(prev => new Set(prev).add(movie.id));
+              // selectedMovie 업데이트
+              if (selectedMovie && selectedMovie.id === movie.id) {
+                setSelectedMovie(prev => ({
+                  ...prev,
+                  is_liked: true,
+                  like_count: (prev.like_count || 0) + 1
+                }));
+              }
+              // movies 배열 업데이트
+              setMovies(prev => prev.map(m => 
+                m.id === movie.id 
+                  ? { ...m, is_liked: true, like_count: (m.like_count || 0) + 1 }
+                  : m
+              ));
+            } else {
+              // 좋아요 취소
+              setLikedContents(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(movie.id);
+                return newSet;
+              });
+              // selectedMovie 업데이트
+              if (selectedMovie && selectedMovie.id === movie.id) {
+                setSelectedMovie(prev => ({
+                  ...prev,
+                  is_liked: false,
+                  like_count: Math.max((prev.like_count || 0) - 1, 0)
+                }));
+              }
+              // movies 배열 업데이트
+              setMovies(prev => prev.map(m => 
+                m.id === movie.id 
+                  ? { ...m, is_liked: false, like_count: Math.max((m.like_count || 0) - 1, 0) }
+                  : m
+              ));
+            }
+          }
+          
+          // 데이터 갱신 (백엔드와 동기화)
+          initializeData();
+          return;
+        }
+        
+        // 다른 에러인 경우
+        const errorText = await res.text();
+        console.error(`[Like] 좋아요 처리 실패 (${res.status})`);
+        if (res.status !== 400 && res.status !== 404) {
+          let errorData;
+          try {
+            errorData = JSON.parse(errorText);
+          } catch (e) {
+            errorData = { detail: errorText };
+          }
+          alert(`좋아요 처리 실패: ${errorData.detail || errorText}`);
+        }
+        
+        // 400/404 에러인 경우 데이터 갱신
+        if (res.status === 400 || res.status === 404) {
+          initializeData();
+        }
+        return;
+      }
+      
+      // 성공
+      console.log(`[Like] ✅ 좋아요 ${method === "POST" ? "추가" : "취소"} 완료`);
+      
+      // 로컬 상태 업데이트 (즉시 UI 반영)
+      if (method === "POST") {
+        // 좋아요 추가
+        setLikedContents(prev => new Set(prev).add(movie.id));
+        // selectedMovie 업데이트
+        if (selectedMovie && selectedMovie.id === movie.id) {
+          setSelectedMovie(prev => ({
+            ...prev,
+            is_liked: true,
+            like_count: (prev.like_count || 0) + 1
+          }));
+        }
+        // movies 배열 업데이트
+        setMovies(prev => prev.map(m => 
+          m.id === movie.id 
+            ? { ...m, is_liked: true, like_count: (m.like_count || 0) + 1 }
+            : m
+        ));
+      } else {
+        // 좋아요 취소
+        setLikedContents(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(movie.id);
+          return newSet;
+        });
+        // selectedMovie 업데이트
+        if (selectedMovie && selectedMovie.id === movie.id) {
+          setSelectedMovie(prev => ({
+            ...prev,
+            is_liked: false,
+            like_count: Math.max((prev.like_count || 0) - 1, 0)
+          }));
+        }
+        // movies 배열 업데이트
+        setMovies(prev => prev.map(m => 
+          m.id === movie.id 
+            ? { ...m, is_liked: false, like_count: Math.max((m.like_count || 0) - 1, 0) }
+            : m
+        ));
+      }
+      
+      // 데이터 갱신 (백엔드와 동기화)
+      initializeData();
+    } catch (err) {
+      console.error("[Like] 좋아요 처리 실패:", err);
+      alert("좋아요 처리 중 오류가 발생했습니다.");
+    }
+  };
+
+  // === [기능 추가] 시청 기록 저장 로직 ===
+  const saveWatchProgress = async (contentId, time) => {
+    try {
+      await fetch(`${API_BASE_URL}/watch-history`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ content_id: contentId, last_played_time: time })
+      });
+    } catch (e) { console.error("기록 저장 실패"); }
+  };
+
+  const nextSlide = useCallback(() => {
+    if (displayMovies.length > 0) setCurrentIdx(idx => (idx + 1) % displayMovies.length);
+  }, [displayMovies.length]);
+
+  const prevSlide = () => {
+    if (displayMovies.length > 0) setCurrentIdx(idx => (idx - 1 + displayMovies.length) % displayMovies.length);
+  };
+
+  // 자동 슬라이더 (디즈니 플러스 스타일)
+  useEffect(() => {
+    if (!token || theater || isSearchMode) return; // 로그인하지 않았거나 theater/search 모드면 자동 슬라이드 안 함
+    
+    const autoSlideInterval = setInterval(() => {
+      nextSlide();
+    }, 5000); // 5초마다 자동 슬라이드
+
+    return () => clearInterval(autoSlideInterval);
+  }, [token, theater, isSearchMode, nextSlide]);
+
+  const handleBypassLogin = () => {
+    localStorage.setItem("accessToken", "bypass_success_token");
+    setToken("bypass_success_token");
+    window.location.reload();
+  };
+
+  const handleLogin = async (email, password) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        localStorage.setItem("accessToken", data.access_token);
+        setToken(data.access_token);
+        window.location.reload();
+      } else { alert("로그인 실패"); }
+    } catch (err) { alert("서버 연결 실패 (BYPASS를 사용하세요)"); }
+  };
+
+  // === [수정] 유희님 .mp4 파일 연동 로직 ===
+  const handlePlay = async (movie) => {
+    console.log(`[Video] ========== handlePlay 호출됨 ==========`);
+    console.log(`[Video] movie:`, movie);
+    console.log(`[Video] movie?.id:`, movie?.id);
+    console.log(`[Video] token:`, token ? token.substring(0, 20) + '...' : '없음');
+    
+    try {
+      if (!movie || !movie.id) {
+        console.error("[Video] 유효하지 않은 영화 정보", movie);
+        alert("영화 정보가 올바르지 않습니다.");
+        return;
+      }
+
+      // ContentModal 닫기 (시청하기 버튼 클릭 시)
+      console.log(`[Video] ContentModal 닫기`);
+      // theater 모드를 먼저 활성화하여 ContentModal이 렌더링되지 않도록 함
+      setTheater(true);
+
+      if (token === "bypass_success_token") {
+        console.log("[Video] BYPASS 모드: 테스트 영상 사용");
+        setActiveVideoUrl("https://bitdash-a.akamaihd.net/content/sintel/hls/playlist.m3u8");
+        // theater는 이미 활성화됨
+        console.log(`[Video] BYPASS 모드 - theater 활성화 완료`);
+        return;
+      }
+    
+      const apiUrl = `${API_BASE_URL}/contents/${movie.id}/video-assets/s3/list`;
+      console.log(`[Video] API 호출 시작: ${apiUrl}`);
+      console.log(`[Video] 토큰: ${token ? token.substring(0, 20) + '...' : '없음'}`);
+      
+      const res = await fetch(apiUrl, {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+
+      console.log(`[Video] API 응답 상태: ${res.status} ${res.statusText}`);
+
+      if (!res.ok) {
+        // 토큰 만료 체크
+        if (await checkTokenExpired(res)) return;
+        
+        const errorText = await res.text();
+        console.error(`[Video] API 에러 (${res.status}):`, errorText);
+        throw new Error(`API 요청 실패: ${res.status} ${res.statusText}`);
+      }
+
+      const data = await res.json();
+      console.log(`[Video] API 응답 데이터:`, data);
+      console.log(`[Video] 응답 데이터 타입:`, Array.isArray(data) ? '배열' : typeof data);
+      console.log(`[Video] 응답 데이터 길이:`, Array.isArray(data) ? data.length : 'N/A');
+      
+      if (!data || !Array.isArray(data) || data.length === 0) {
+        console.warn(`[Video] 비디오 파일을 찾을 수 없습니다. content_id: ${movie.id}`);
+        alert(`비디오 파일을 찾을 수 없습니다. (content_id: ${movie.id})\n\nS3 버킷에 해당 콘텐츠의 비디오 파일이 업로드되어 있는지 확인해주세요.`);
+        return;
+      }
+
+      // .mp4 파일을 최우선으로 선택
+      const videoFile = data.find(file => file.key && file.key.endsWith('.mp4')) || data[0];
+      
+      console.log(`[Video] 선택된 파일 정보:`, videoFile);
+      
+      if (!videoFile || !videoFile.url) {
+        console.error(`[Video] 유효한 비디오 URL을 찾을 수 없습니다.`, videoFile);
+        alert("비디오 URL을 찾을 수 없습니다.");
+        return;
+      }
+
+      console.log(`[Video] 최종 선택: key=${videoFile.key}, url=${videoFile.url}`);
+      
+      // 상태 업데이트: selectedMovie -> activeVideoUrl (theater는 이미 활성화됨)
+      console.log(`[Video] 상태 업데이트 시작...`);
+      
+      // selectedMovie 설정 (플레이어에 전달하기 위해)
+      setSelectedMovie(movie);
+      console.log(`[Video] selectedMovie 설정 완료`);
+      
+      setActiveVideoUrl(videoFile.url);
+      console.log(`[Video] activeVideoUrl 설정 완료: ${videoFile.url}`);
+      console.log(`[Video] theater 모드 활성화 완료`);
+      
+    } catch (err) {
+      console.error("[Video] 영상 로드 실패:", err);
+      console.error("[Video] 에러 스택:", err.stack);
+      alert(`영상 로드 실패: ${err.message || "알 수 없는 오류"}\n\n콘솔을 확인해주세요.`);
+    }
+  };
+
+  // 검색 기능 - 백엔드 검색 API 활용 (/search?q=)
+  const handleSearch = async (query) => {
+    if (!query.trim()) {
+      setSearchResults([]);
+      setIsSearchMode(false);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const headers = { "Authorization": `Bearer ${token}` };
+      
+      // 백엔드 검색 API 엔드포인트 사용: /search?q={query}
+      const searchUrl = `${API_BASE_URL}/search?q=${encodeURIComponent(query)}`;
+      console.log(`[Search] 검색 API 호출: ${searchUrl}`);
+      
+      const response = await fetch(searchUrl, { headers });
+      console.log(`[Search] 검색 API 응답 상태: ${response.status} ${response.statusText}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log(`[Search] 검색 API 응답 데이터:`, data);
+        
+        // SearchResponse 형식: { hits: [...], query: "...", ... }
+        const searchData = data.hits || [];
+        console.log(`[Search] 검색 결과 개수: ${searchData.length}개`);
+        
+        // 검색 결과에 is_liked 속성 추가 (likedContents 기반)
+        const resultsWithLiked = searchData.map(item => ({
+          ...item,
+          is_liked: likedContents.has(item.id) || false
+        }));
+        
+        setSearchResults(resultsWithLiked);
+        setIsSearchMode(true);
+      } else {
+        if (await checkTokenExpired(response)) return;
+        
+        // 503 등의 에러 처리 (Meilisearch 서비스 사용 불가)
+        if (response.status === 503) {
+          console.warn(`[Search] 검색 서비스 사용 불가 (503)`);
+          // 검색 서비스가 없을 때는 빈 결과 반환
+          setSearchResults([]);
+        } else if (response.status === 404) {
+          console.log(`[Search] 검색 결과 없음: ${response.status}`);
+          setSearchResults([]);
+        } else {
+          const errorText = await response.text();
+          console.error(`[Search] 검색 실패 (${response.status}):`, errorText);
+          setSearchResults([]);
+        }
+      }
+    } catch (error) {
+      console.error("[Search] 검색 중 오류:", error);
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!token) {
+      // 토큰이 없을 때는 인트로 플래그 리셋
+      hasShownIntroRef.current = false;
+      return;
+    }
+    
+    // 토큰이 있을 때
+    // 인트로를 아직 표시하지 않았을 때만 인트로 표시
+    let introTimer;
+    if (!hasShownIntroRef.current) {
+      hasShownIntroRef.current = true;
+      setIsIntro(true);
+      introTimer = setTimeout(() => setIsIntro(false), 2000);
+    } else {
+      // 이미 인트로를 표시한 경우 인트로 표시 안 함
+      setIsIntro(false);
+    }
+    
+    initializeData();
+    
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setIsProfileOpen(false);
+    };
+    window.addEventListener("mousedown", handleClickOutside);
+    window.addEventListener('scroll', () => setIsScrolled(window.scrollY > 50));
+    
+    return () => {
+      window.removeEventListener("mousedown", handleClickOutside);
+      if (introTimer) clearTimeout(introTimer);
+    };
+  }, [token, initializeData]);
+
+  const continuingMovies = watchHistory.map(h => {
+    const m = movies.find(mv => mv.id === h.content_id);
+    return m ? { ...m, last_played_time: h.last_played_time } : null;
+  }).filter(Boolean);
+
   return (
-    <div className="app">
-      <section className="hero-section">
-        <header className="hero-header">
-          <div className="logo">
-            <div className="logo-symbol" aria-hidden="true" />
-            K-DEFENSE TECH
-          </div>
-
-          <nav className="hero-nav" aria-label="Primary">
-            <a href="#who">Who We Are</a>
-            <a href="#why">Why We Exist</a>
-            <a href="#what">What We Do</a>
-            <a href="#media">Media</a>
-            <a href="#careers">Careers</a>
-          </nav>
-
-          <div className="header-right">
-            <span className="lang">KR/EN</span>
-            <button className="menu-btn" type="button" aria-label="Open menu">
-              ☰
-            </button>
-          </div>
-        </header>
-
-        <div className="bottom-content">
-          <h1 className="main-slogan">
-            The innovating pioneer for
-            <br />
-            a sustainable tomorrow
-          </h1>
-          <div className="bottom-bar" aria-hidden="true" />
+    <div className="App">
+      {!token ? (
+        <div className="login-screen-wrapper">
+          <LoginOverlay onLogin={handleLogin} onBypass={handleBypassLogin} />
         </div>
+      ) : (
+        <>
+          {isIntro && (
+            <div className="netflix-intro">
+              <div className="logo-zoom">
+                <img 
+                  src="/logo.png" 
+                  alt="Formation+" 
+                  className="logo-zoom-image"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.style.display = 'block';
+                  }}
+                />
+                <div className="logo-zoom-icon" style={{ display: 'none' }}>
+                  <div className="logo-zoom-play"></div>
+                </div>
+                <span className="logo-zoom-text">Formation+</span>
+              </div>
+            </div>
+          )}
+          <header className={`ott-header ${isScrolled ? 'scrolled' : ''}`}>
+            <div className="header-left">
+              <div className="logo" onClick={() => window.scrollTo(0,0)}>
+                <img 
+                  src="/logo.png" 
+                  alt="Formation+" 
+                  className="logo-image"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.style.display = 'block';
+                  }}
+                />
+                <div className="logo-icon" style={{ display: 'none' }}>
+                  <div className="logo-play"></div>
+                </div>
+                <span>Formation+</span>
+              </div>
+            </div>
+            <div className="header-right">
+              {isSearchMode ? (
+                <div className="search-input-wrapper">
+                  <input
+                    type="text"
+                    className="search-input"
+                    placeholder="검색..."
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      if (e.target.value.trim()) {
+                        handleSearch(e.target.value);
+                      } else {
+                        setSearchResults([]);
+                        setIsSearchMode(false);
+                      }
+                    }}
+                    autoFocus
+                  />
+                  <button 
+                    className="search-close-btn"
+                    onClick={() => {
+                      setSearchQuery('');
+                      setSearchResults([]);
+                      setIsSearchMode(false);
+                    }}
+                  >
+                    ✕
+                  </button>
+                </div>
+              ) : (
+                <div className="search-icon-btn" onClick={() => setIsSearchMode(true)}>
+                  <Icons.Search />
+                </div>
+              )}
+              <div className="region-tag">{userRegion}</div>
+              <div className={`profile-menu-wrapper ${isProfileOpen ? 'open' : ''}`} ref={dropdownRef}>
+                <div className="profile-trigger" onClick={() => setIsProfileOpen(!isProfileOpen)}>
+                  {/* 수민님 전용 파란 동그라미 아이콘 유지 */}
+                  <div className="profile-icon-box">{userData?.first_name?.charAt(0).toUpperCase() || "S"}</div>
+                  <div className="dropdown-arrow"></div>
+                </div>
+                {isProfileOpen && (
+                  <div className="profile-dropdown">
+                    <div className="dropdown-item" style={{pointerEvents: 'none', paddingBottom: '0'}}>
+                      <strong>{userData?.first_name} {userData?.last_name}님</strong> {/* 풀네임 적용 */}
+                      <div style={{fontSize: '0.7rem', color: '#888', marginTop: '4px'}}>{userData?.email}</div>
+                    </div>
+                    <div className="dropdown-divider"></div>
+                    <div className="dropdown-info-row">
+                      <div><span className="info-label">접속 리전:</span> <span className="info-value">{userRegion}</span></div>
+                      <div>
+                        <span className="info-label">가입 일시:</span>
+                        <span className="info-value">{userData?.created_at ? new Date(userData.created_at).toLocaleDateString() : "2026. 01. 16."}</span>
+                      </div>
+                    </div>
+                    <div className="dropdown-divider"></div>
+                    <div className="dropdown-item" onClick={() => {localStorage.removeItem("accessToken"); window.location.reload();}}>Formation+에서 로그아웃</div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </header>
 
+          <main className="container">
+            {isSearchMode ? (
+              <div className="search-results-container">
+                {searchQuery && searchResults.length > 0 ? (
+                  <>
+                    <h2 className="search-section-title">
+                      "{searchQuery}" 검색 결과
+                    </h2>
+                    <div className="search-row">
+                      <div className="search-row-content">
+                        {searchResults.map(item => (
+                          <div 
+                            key={item.id} 
+                            className="search-thumbnail" 
+                            style={{ backgroundImage: `url(${item.thumbnail_url})` }} 
+                            onClick={() => setSelectedMovie(item)}
+                          >
+                            <div className="thumbnail-overlay">
+                              <div className="thumbnail-title">{item.title}</div>
+                              <div className="thumbnail-like">❤️ {item.like_count || 0}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                ) : searchQuery && !isSearching ? (
+                  <div className="search-no-results">
+                    <h2 className="search-section-title">"{searchQuery}" 검색 결과</h2>
+                    <p>검색 결과가 없습니다.</p>
+                  </div>
+                ) : !searchQuery ? (
+                  <>
+                    <h2 className="search-section-title">인기 검색</h2>
+                    <div className="search-row">
+                      <div className="search-row-content">
+                        {movies.slice(0, 10).map(item => (
+                          <div 
+                            key={item.id} 
+                            className="search-thumbnail" 
+                            style={{ backgroundImage: `url(${item.thumbnail_url})` }} 
+                            onClick={() => setSelectedMovie(item)}
+                          >
+                            <div className="thumbnail-overlay">
+                              <div className="thumbnail-title">{item.title}</div>
+                              <div className="thumbnail-like">❤️ {item.like_count || 0}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <h2 className="search-section-title">추천</h2>
+                    <div className="search-row">
+                      <div className="search-row-content">
+                        {movies.slice(10, 20).map(item => (
+                          <div 
+                            key={item.id} 
+                            className="search-thumbnail" 
+                            style={{ backgroundImage: `url(${item.thumbnail_url})` }} 
+                            onClick={() => setSelectedMovie(item)}
+                          >
+                            <div className="thumbnail-overlay">
+                              <div className="thumbnail-title">{item.title}</div>
+                              <div className="thumbnail-like">❤️ {item.like_count || 0}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="search-loading">
+                    <p>검색 중...</p>
+                  </div>
+                )}
+              </div>
+            ) : theater ? (
+              <div className="theater-overlay">
+                 <button className="close-theater-btn" onClick={() => setTheater(false)}>✕ 닫기</button>
+                 {selectedMovie && activeVideoUrl ? (
+                   <SmartPlayer 
+                     src={activeVideoUrl} 
+                     region={userRegion} 
+                     contentData={selectedMovie} 
+                     initialTime={watchHistory.find(h => h.content_id === selectedMovie.id)?.last_played_time || 0}
+                     onProgressSave={saveWatchProgress}
+                   />
+                 ) : (
+                   <div style={{ padding: '2rem', color: '#fff' }}>
+                     <p>비디오를 불러오는 중...</p>
+                     {!selectedMovie && <p>콘텐츠 정보가 없습니다.</p>}
+                     {!activeVideoUrl && <p>비디오 URL을 불러오는 중...</p>}
+                   </div>
+                 )}
+              </div>
+            ) : (
+              <>
+                <section className="hero-container">
+                  <button className="nav-arrow arrow-left" onClick={prevSlide}>〈</button>
+                  <button className="nav-arrow arrow-right" onClick={nextSlide}>〉</button>
+                  <div className="hero-slider-wrapper">
+                    {displayMovies.map((s, idx) => (
+                      <div key={s.id} className={`hero-slide ${idx === currentIdx ? 'active' : ''}`} style={{ backgroundImage: `url(${s.thumbnail_url})` }}>
+                        <div className="hero-overlay">
+                          <div className="hero-content">
+                            <h1 className="hero-title">{s.title}</h1>
+                            <p className="hero-desc">{s.description}</p>
+                            <div className="hero-btns">
+                              <button 
+                                className="play-btn" 
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  console.log(`[Video] 재생 버튼 클릭:`, s);
+                                  handlePlay(s);
+                                }}
+                              >
+                                ▶ {t('play')}
+                              </button>
+                              <button className="info-btn" onClick={() => setSelectedMovie(s)}>ⓘ {t('info')}</button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
 
-	 	  	  	  
-        <a className="scroll-down" href="#who" aria-label="Scroll down">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z" />
-          </svg>
-        </a>
-      </section>
+                {/* 시청 중인 콘텐츠 */}
+                {continuingMovies.length > 0 && (
+                  <section className="content-row">
+                    <h3 className="row-title">시청 중인 콘텐츠</h3>
+                    <div className="content-row-wrapper">
+                      <div className="content-row-content">
+                        {continuingMovies.map(movie => (
+                          <div 
+                            key={`history-${movie.id}`} 
+                            className="content-thumbnail" 
+                            style={{ backgroundImage: `url(${movie.thumbnail_url})` }} 
+                            onClick={() => setSelectedMovie(movie)}
+                          >
+                            <div className="thumbnail-overlay">
+                              <div className="thumbnail-title">{movie.title}</div>
+                            </div>
+                            <div className="progress-bar-container">
+                              <div className="progress-bar-fill" style={{ width: `${Math.min((movie.last_played_time / (movie.duration || 3600)) * 100, 100)}%` }}></div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </section>
+                )}
+
+                {/* 추천 콘텐츠 */}
+                {movies.length > 0 && (
+                  <section className="content-row">
+                    <h3 className="row-title">{t('recommend_title')}</h3>
+                    <div className="content-row-wrapper">
+                      <div className="content-row-content">
+                        {movies.map(item => (
+                          <div 
+                            key={item.id} 
+                            className="content-thumbnail" 
+                            style={{ backgroundImage: `url(${item.thumbnail_url})` }} 
+                            onClick={() => setSelectedMovie(item)}
+                          >
+                            <div className="thumbnail-overlay">
+                              <div className="thumbnail-title">{item.title}</div>
+                              <div className="thumbnail-like">❤️ {item.like_count || 0}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </section>
+                )}
+              </>
+            )}
+          </main>
+          {/* theater 모드가 아닐 때만 ContentModal 표시 */}
+          {selectedMovie && !theater && (
+            <ContentModal 
+              content={{
+                ...selectedMovie,
+                is_liked: likedContents.has(selectedMovie.id) || selectedMovie.is_liked || false
+              }} 
+              onClose={() => setSelectedMovie(null)} 
+              onPlay={() => handlePlay(selectedMovie)} 
+              onLike={() => handleToggleLike(selectedMovie)}
+            />
+          )}
+        </>
+      )}
     </div>
   );
 }
-

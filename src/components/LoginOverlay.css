@@ -1,0 +1,167 @@
+.login-overlay {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(rgba(4,7,20,0.9), rgba(4,7,20,0.9)), 
+              url('https://assets.nflxext.com/ffe/siteui/vlv3/f841d4c7-10e1-40af-bca1-07e3f8eb14af/615959b1-5b59-4db9-a00d-71844111979b/KR-ko-20220502-popsignuptwoweeks-perspective_alpha_website_large.jpg');
+  background-size: cover;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+.login-container {
+  background-color: rgba(4, 7, 20, 0.95);
+  padding: 60px 68px 40px;
+  border-radius: 4px;
+  width: 100%;
+  max-width: 450px;
+  border: 1px solid rgba(0, 212, 255, 0.2);
+}
+
+/* 로고와 서비스명 스타일 */
+.login-logo-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 2rem;
+  justify-content: center;
+}
+
+.login-logo-image {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  display: block;
+}
+
+.login-logo-icon {
+  width: 60px;
+  height: 60px;
+  background: #0077cc;
+  border-radius: 8px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-logo-icon .logo-play {
+  width: 0;
+  height: 0;
+  border-left: 12px solid #fff;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  margin-left: 4px;
+}
+
+.login-service-name {
+  color: #00d4ff;
+  font-size: 2.5rem;
+  font-weight: 900;
+  margin: 0;
+  letter-spacing: -1px;
+}
+
+.login-form h2 {
+  color: #fff;
+  margin-bottom: 28px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.login-form input {
+  width: 100%;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  border: none;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border: 1px solid rgba(0, 212, 255, 0.2);
+  transition: border-color 0.3s;
+  box-sizing: border-box;
+}
+
+.login-form input:focus {
+  outline: none;
+  border-color: #00d4ff;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.login-form input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.login-form button {
+  width: 100%;
+  padding: 16px;
+  margin-top: 24px;
+  background: linear-gradient(135deg, #0077cc 0%, #00d4ff 100%);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: opacity 0.3s, transform 0.2s;
+}
+
+.login-form button:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.login-form button:active {
+  transform: translateY(0);
+}
+
+.login-form button:disabled {
+  background: rgba(0, 119, 204, 0.5);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.login-help {
+  margin-top: 20px;
+  color: #b3b3b3;
+  font-size: 14px;
+  text-align: center;
+}
+
+.signup-link {
+  color: #00d4ff;
+  cursor: pointer;
+  margin-top: 5px;
+  transition: opacity 0.3s;
+}
+
+.signup-link:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
+/* 디자인 확인용 우회 버튼 */
+.login-bypass-btn {
+  width: 100%;
+  padding: 12px 16px;
+  margin-top: 16px;
+  background: transparent;
+  color: #00d4ff;
+  border: 1px solid rgba(0, 212, 255, 0.5);
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-align: center;
+}
+
+.login-bypass-btn:hover {
+  background: rgba(0, 212, 255, 0.1);
+  border-color: #00d4ff;
+  color: #fff;
+}
+
+.login-bypass-btn:active {
+  transform: translateY(1px);
+}

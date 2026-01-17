@@ -1,0 +1,1149 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700;900&display=swap');
+
+/* === [강제 삭제] 로고 주변의 가상 아이콘(< > 등) 및 불필요한 요소 영구 제거 === */
+.logo::before, .logo::after, 
+.header-left::before, .header-left::after,
+.ott-header::before, .ott-header::after {
+    display: none !important;
+    content: none !important;
+}
+
+/* === 1. 전역 초기화 및 레이아웃 === */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  margin: 0;
+  background-color: #040714; /* 이 깊은 남색 배경과 어울리게 변경합니다 */
+  color: #f9f9f9;
+  font-family: 'Noto Sans KR', sans-serif;
+  overflow-x: hidden;
+}
+
+.container { padding: 0 4%; width: 100%; }
+
+/* === 2. Formation+ 전용 인트로 === */
+.netflix-intro {
+  position: fixed; inset: 0; background: #000;
+  display: flex; justify-content: center; align-items: center; z-index: 10000;
+}
+.logo-zoom {
+  font-size: 5rem; 
+  font-weight: 900; 
+  letter-spacing: -2px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  animation: formationZoom 2s ease-in-out forwards;
+}
+
+/* Formation+ 로고 이미지 (인트로) */
+.logo-zoom-image {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+  display: block;
+}
+
+/* 인트로 로고 이미지가 없을 때 CSS 로고 표시 - F 모양 (3개 가로 막대) */
+.logo-zoom-icon {
+  width: 120px;
+  height: 120px;
+  position: relative;
+  background: linear-gradient(135deg, #00d4ff 0%, #8b5cf6 100%);
+  border-radius: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 
+    0 8px 30px rgba(0, 212, 255, 0.5),
+    inset 0 2px 0 rgba(255, 255, 255, 0.3),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.2);
+  overflow: visible;
+}
+
+/* 왼쪽 세로 막대 */
+.logo-zoom-icon::before {
+  content: '';
+  position: absolute;
+  width: 15px;
+  height: 100%;
+  left: 21px;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 4px;
+}
+
+/* 중앙 Play 버튼 */
+.logo-zoom-play {
+  position: absolute;
+  width: 36px;
+  height: 36px;
+  background: #000;
+  clip-path: polygon(0 0, 0 100%, 100% 50%);
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+}
+
+/* 오른쪽 세 개의 가로 막대 (F 모양) */
+.logo-zoom-icon::after {
+  content: '';
+  position: absolute;
+  width: 30px;
+  height: 9px;
+  right: 21px;
+  top: 27px;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 2px;
+  box-shadow: 
+    0 15px 0 rgba(0, 0, 0, 0.25),
+    0 30px 0 rgba(0, 0, 0, 0.25);
+}
+
+.logo-zoom-text {
+  background: linear-gradient(to bottom, #fff 50%, #888 100%);
+  -webkit-background-clip: text; 
+  -webkit-text-fill-color: transparent;
+}
+
+@keyframes formationZoom {
+  0% { transform: scale(0.8); opacity: 0; }
+  40% { opacity: 1; }
+  100% { transform: scale(12); opacity: 0; }
+}
+
+/* === 3. 헤더 UI (수민님의 청정 디자인 유지) === */
+.ott-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 4%; height: 72px; position: fixed; width: 100%; top: 0; z-index: 1000;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
+  transition: background 0.4s;
+}
+.ott-header.scrolled { background: #090b13; }
+.logo { 
+  font-size: 1.8rem; 
+  font-weight: 900; 
+  color: #fff; 
+  cursor: pointer; 
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Formation+ 로고 이미지 */
+.logo-image {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  display: block;
+}
+
+/* 로고 이미지가 없을 때 CSS 로고 표시 - F 모양 (3개 가로 막대) */
+.logo-icon {
+  width: 40px;
+  height: 40px;
+  position: relative;
+  background: linear-gradient(135deg, #00d4ff 0%, #8b5cf6 100%);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 
+    0 4px 15px rgba(0, 212, 255, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+  overflow: visible;
+}
+
+/* 왼쪽 세로 막대 */
+.logo-icon::before {
+  content: '';
+  position: absolute;
+  width: 5px;
+  height: 100%;
+  left: 7px;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 2px;
+}
+
+/* 중앙 Play 버튼 */
+.logo-play {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: #000;
+  clip-path: polygon(0 0, 0 100%, 100% 50%);
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+}
+
+/* 오른쪽 세 개의 가로 막대 (F 모양) */
+.logo-icon::after {
+  content: '';
+  position: absolute;
+  width: 10px;
+  height: 3px;
+  right: 7px;
+  top: 9px;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 1px;
+  box-shadow: 
+    0 5px 0 rgba(0, 0, 0, 0.25),
+    0 10px 0 rgba(0, 0, 0, 0.25);
+}
+
+.header-right {
+  display: flex; align-items: center; justify-content: flex-end;
+  gap: 20px; flex-shrink: 0;
+}
+
+.search-icon-btn {
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.3s;
+}
+
+.search-icon-btn:hover {
+  opacity: 0.7;
+}
+
+.search-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  padding: 8px 12px;
+  min-width: 300px;
+}
+
+.search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 1rem;
+  outline: none;
+}
+
+.search-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.search-close-btn {
+  background: none;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  font-size: 1.2rem;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.3s;
+}
+
+.search-close-btn:hover {
+  opacity: 0.7;
+}
+
+/* 디즈니 플러스 스타일 검색 화면 */
+.search-results-container {
+  padding: 120px 4% 40px;
+  min-height: 60vh;
+}
+
+.search-section-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+  margin-top: 40px;
+  color: #fff;
+  padding-left: 4px;
+}
+
+.search-section-title:first-child {
+  margin-top: 0;
+}
+
+.search-row {
+  margin-bottom: 40px;
+  position: relative;
+}
+
+.search-row-content {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 8px 0 20px 0;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.search-row-content::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+.search-thumbnail {
+  flex: 0 0 280px;
+  aspect-ratio: 16/9;
+  border-radius: 8px;
+  background-size: cover;
+  background-position: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.search-thumbnail:hover {
+  transform: scale(1.08) translateY(-8px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  z-index: 10;
+}
+
+.thumbnail-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, transparent 50%);
+  opacity: 0;
+  transition: opacity 0.3s;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 16px;
+}
+
+.search-thumbnail:hover .thumbnail-overlay {
+  opacity: 1;
+}
+
+.thumbnail-title {
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+  line-height: 1.3;
+}
+
+.thumbnail-like {
+  color: #fff;
+  font-size: 0.85rem;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+}
+
+.search-no-results {
+  text-align: center;
+  padding: 60px 20px;
+  color: #888;
+  font-size: 1.2rem;
+}
+
+.search-loading {
+  text-align: center;
+  padding: 60px 20px;
+  color: #fff;
+  font-size: 1.2rem;
+}
+
+.region-tag {
+  font-size: 0.7rem; font-weight: 900; color: #00d4ff; border: 1px solid #00d4ff;
+  padding: 3px 8px; border-radius: 2px; background: rgba(0, 212, 255, 0.1);
+}
+
+/* === 4. 넷플릭스 스타일 프로필 드롭다운 === */
+.profile-menu-wrapper { position: relative; }
+.profile-trigger { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+
+/* [수정] 프로필 아이콘 스타일 변경 */
+.profile-icon-box {
+  width: 32px; height: 32px;
+  
+  /* 1. 색상 변경: 딥 스카이 블루 (남색 배경과 잘 어울림) */
+  background: #0077cc; 
+  
+  /* 2. 모양 변경: 사각형(4px) -> 동그라미(50%) */
+  border-radius: 50%; 
+  
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 900; color: #fff; font-size: 0.8rem;
+  transition: background 0.3s; /* 부드러운 색상 전환 효과 */
+}
+
+/* 마우스 올렸을 때 살짝 밝아지는 효과 추가 */
+.profile-trigger:hover .profile-icon-box {
+    background: #0088ee;
+}
+
+
+.dropdown-arrow {
+  border: 5px solid transparent; border-top-color: #fff; margin-top: 5px;
+  transition: transform 0.3s;
+}
+.profile-menu-wrapper.open .dropdown-arrow { transform: rotate(180deg); }
+
+.profile-dropdown {
+  position: absolute; top: 50px; right: 0; width: 220px;
+  background: rgba(0, 0, 0, 0.95); border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 4px; padding: 15px 0; box-shadow: 0 10px 20px rgba(0,0,0,0.8);
+  z-index: 2000;
+}
+
+.dropdown-info-row {
+    padding: 0 20px 10px;
+    font-size: 0.75rem;
+    display: flex; flex-direction: column; gap: 4px;
+}
+.info-label { color: #888; margin-right: 5px; }
+.info-value { color: #fff; font-weight: 700; }
+
+.dropdown-item {
+  padding: 12px 20px; font-size: 0.85rem; color: #e5e5e5; cursor: pointer;
+  transition: 0.2s;
+}
+.dropdown-item:hover { background: rgba(255, 255, 255, 0.1); color: #fff; text-decoration: underline; }
+.dropdown-divider { height: 1px; background: rgba(255, 255, 255, 0.1); margin: 10px 0; }
+
+/* === 5. 히어로 슬라이더 & 그리드 === */
+/* 디즈니 플러스 스타일 Hero 섹션 */
+.hero-container { 
+  position: relative; 
+  width: 100%; 
+  height: 85vh; 
+  margin-bottom: 40px; 
+  overflow: hidden; 
+  perspective: 1500px; /* 입체감을 위한 perspective */
+  padding: 0 4%;
+}
+
+.hero-slider-wrapper { 
+  display: flex; 
+  width: 100%; 
+  height: 100%; 
+  position: relative;
+  transform-style: preserve-3d;
+  align-items: center;
+}
+
+.hero-slide { 
+  position: absolute;
+  left: 4%;
+  right: 4%;
+  top: 0;
+  bottom: 0;
+  width: calc(100% - 8%);
+  height: 90%;
+  margin: auto;
+  background-size: cover; 
+  background-position: center; 
+  border-radius: 20px; /* 둥근 창 느낌 */
+  opacity: 0;
+  transform: translateX(150%) scale(0.75) rotateY(15deg);
+  transition: all 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transform-style: preserve-3d;
+  will-change: transform, opacity;
+  filter: blur(3px) brightness(0.6);
+  box-shadow: 
+    0 25px 80px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+.hero-slide.active { 
+  opacity: 1;
+  transform: translateX(0) scale(1) rotateY(0deg);
+  filter: blur(0px) brightness(1);
+  z-index: 2;
+  box-shadow: 
+    0 40px 120px rgba(0, 0, 0, 0.8),
+    0 0 200px rgba(0, 212, 255, 0.15),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1),
+    inset 0 0 150px rgba(0, 0, 0, 0.2);
+}
+
+.hero-slide.prev {
+  transform: translateX(-150%) scale(0.75) rotateY(-15deg);
+  opacity: 0;
+  filter: blur(3px) brightness(0.6);
+}
+
+.hero-overlay { 
+  position: absolute; 
+  inset: 0; 
+  background: linear-gradient(to right, rgba(4, 7, 20, 0.85) 10%, transparent 70%), linear-gradient(to top, rgba(4, 7, 20, 1) 0%, transparent 35%); 
+  display: flex; 
+  align-items: center; 
+  padding: 0 4%; 
+  z-index: 1;
+  transform-style: preserve-3d;
+  border-radius: 20px; /* 슬라이드와 동일한 둥근 모서리 */
+}
+
+.hero-content {
+  transform: translateZ(50px); /* 텍스트를 앞으로 끌어올림 (입체감) */
+}
+
+.hero-title { 
+  font-size: 3.5rem; 
+  font-weight: 900; 
+  margin-bottom: 15px;
+  text-shadow: 
+    0 4px 20px rgba(0, 0, 0, 0.8),
+    0 0 40px rgba(0, 212, 255, 0.3);
+  transform: translateZ(30px);
+}
+
+.hero-desc {
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+  transform: translateZ(20px);
+}
+
+.hero-btns {
+  transform: translateZ(40px);
+  display: flex;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+/* 디즈니 플러스 스타일 Play 버튼 */
+.play-btn {
+  background: rgba(255, 255, 255, 0.95);
+  color: #000;
+  border: none;
+  padding: 14px 32px;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 
+    0 4px 15px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  text-transform: none;
+  letter-spacing: 0.5px;
+}
+
+.play-btn:hover {
+  background: rgba(255, 255, 255, 1);
+  transform: scale(1.05);
+  box-shadow: 
+    0 6px 20px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.play-btn:active {
+  transform: scale(1.02);
+  box-shadow: 
+    0 2px 10px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+/* 디즈니 플러스 스타일 Info 버튼 */
+.info-btn {
+  background: rgba(109, 109, 110, 0.7);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 14px 32px;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
+  box-shadow: 
+    0 4px 15px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  text-transform: none;
+  letter-spacing: 0.5px;
+}
+
+.info-btn:hover {
+  background: rgba(109, 109, 110, 0.9);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: scale(1.05);
+  box-shadow: 
+    0 6px 20px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.info-btn:active {
+  transform: scale(1.02);
+  box-shadow: 
+    0 2px 10px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.nav-arrow { 
+  position: absolute; 
+  top: 50%; 
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.4); 
+  color: rgba(255, 255, 255, 0.9); 
+  border: none;
+  padding: 16px 18px; 
+  cursor: pointer; 
+  z-index: 10; 
+  font-size: 1.8rem;
+  border-radius: 50%;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.7;
+}
+
+.nav-arrow:hover {
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  transform: translateY(-50%) scale(1.15);
+  opacity: 1;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.nav-arrow:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+.arrow-left { left: 20px; } 
+.arrow-right { right: 20px; }
+
+.hero-container:hover .nav-arrow {
+  opacity: 1;
+}
+
+/* 디즈니 플러스 스타일 콘텐츠 행 */
+.content-row {
+  margin-bottom: 48px;
+  padding: 0 4%;
+}
+
+.row-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: #fff;
+  padding-left: 4px;
+}
+
+.content-row-wrapper {
+  position: relative;
+  margin: 0 -4%;
+  padding: 8px 4% 20px 4%;
+}
+
+.content-row-content {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  padding: 8px 0;
+}
+
+.content-row-content::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+.content-thumbnail {
+  flex: 0 0 280px;
+  aspect-ratio: 16/9;
+  border-radius: 8px;
+  background-size: cover;
+  background-position: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.content-thumbnail:hover {
+  transform: scale(1.08) translateY(-8px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  z-index: 10;
+}
+
+.content-thumbnail .thumbnail-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, transparent 50%);
+  opacity: 0;
+  transition: opacity 0.3s;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 16px;
+}
+
+.content-thumbnail:hover .thumbnail-overlay {
+  opacity: 1;
+}
+
+.content-thumbnail .thumbnail-title {
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+  line-height: 1.3;
+}
+
+.content-thumbnail .thumbnail-like {
+  color: #fff;
+  font-size: 0.85rem;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+}
+
+.content-thumbnail .progress-bar-container {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  z-index: 2;
+}
+
+.content-thumbnail .progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #00d4ff 0%, #0077cc 100%);
+  transition: width 0.3s;
+  box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+}
+
+/* 레거시 스타일 (호환성 유지) */
+.search-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
+.search-card { aspect-ratio: 16/9; border-radius: 6px; background-size: cover; cursor: pointer; transition: 0.3s; border: 1px solid rgba(255,255,255,0.1); }
+.search-card:hover { transform: scale(1.05); border-color: #fff; }
+.like-button-modal {
+    background: none;
+    border: 1px solid rgba(255,255,255,0.3);
+    color: #fff;
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: 0.3s;
+}
+
+.like-button-modal:hover {
+    background: rgba(255,255,255,0.1);
+    border-color: #fff;
+}
+
+.like-button-modal.active {
+    color: #e50914; /* 빨간색 하트 */
+    border-color: #e50914;
+}
+/* === 시청 중인 콘텐츠 & 좋아요 보완 스타일 [단순 추가] === */
+.theater-container {
+    position: fixed; inset: 0; background: #000; z-index: 9999;
+}
+.back-btn {
+    position: absolute; top: 20px; left: 20px; z-index: 10001;
+    background: rgba(0,0,0,0.5); color: #fff; border: none; padding: 10px 20px; cursor: pointer;
+}
+
+.card-like-badge {
+    position: absolute; top: 10px; right: 10px;
+    background: rgba(0, 0, 0, 0.6); padding: 3px 8px;
+    border-radius: 12px; font-size: 0.75rem; font-weight: 700;
+}
+
+.history-card { position: relative; overflow: hidden; }
+.progress-bar-container {
+    position: absolute; bottom: 0; left: 0; width: 100%; height: 4px;
+    background: rgba(255, 255, 255, 0.2);
+}
+.progress-bar-fill { height: 100%; background: #e50914; transition: width 0.3s; }
+
+.bypass-btn-fixed {
+    position: fixed; bottom: 10%; left: 50%; transform: translateX(-50%);
+    background: #e50914; color: #fff; border: none; padding: 15px 30px;
+    border-radius: 4px; cursor: pointer; z-index: 10001; font-weight: 900;
+}
+
+/* === 비디오 플레이어 스타일 개선 === */
+.smart-player-box {
+    width: 100%;
+    height: 100vh;
+    background: #000;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.player-dashboard {
+    display: none; /* 제거: 플레이어 상단 정보 바 숨김 */
+}
+
+.video-relative-wrapper {
+    flex: 1;
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden; /* 오버플로우 방지 */
+}
+
+/* video-js 컨테이너가 부모를 채우도록 */
+.video-relative-wrapper .video-js {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* data-vjs-player 컨테이너 */
+.video-relative-wrapper [data-vjs-player] {
+    width: 100% !important;
+    height: 100% !important;
+    position: relative !important;
+}
+
+/* Video.js 커스텀 스타일 */
+.video-js {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 100% !important;
+    background: #000;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+}
+
+/* 비디오 요소 스타일 - 항상 표시 */
+.video-js video {
+    z-index: 1 !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-width: 100% !important;
+    min-height: 100% !important;
+    object-fit: contain !important; /* 비디오가 화면에 맞게 표시 */
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* 컨트롤 바가 비디오 위에 오도록 */
+.video-js .vjs-control-bar {
+    z-index: 1000 !important;
+    position: absolute !important;
+}
+
+/* 컨트롤 바 항상 표시 - 모든 상태에서 강제 */
+.video-js .vjs-control-bar {
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.95), rgba(0, 0, 0, 0.85)) !important;
+    height: 70px !important;
+    padding: 0 20px !important;
+    display: flex !important;
+    align-items: center !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    transition: none !important;
+    z-index: 10 !important;
+    position: absolute !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+}
+
+/* 일반 모드 및 전체화면 모드: 사용자 활성 시에만 표시 */
+.video-js .vjs-control-bar {
+    transition: opacity 0.3s ease, visibility 0.3s ease !important;
+}
+
+.video-js.vjs-user-active .vjs-control-bar {
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: flex !important;
+}
+
+.video-js.vjs-user-inactive .vjs-control-bar {
+    opacity: 0 !important;
+    visibility: hidden !important;
+}
+
+.video-js .vjs-big-play-button {
+    background: rgba(0, 0, 0, 0.5);
+    border: 2px solid #fff;
+    border-radius: 50%;
+    width: 80px;
+    height: 80px;
+    line-height: 80px;
+    font-size: 2.5rem;
+    color: #fff;
+    transition: all 0.3s;
+}
+
+.video-js .vjs-big-play-button:hover {
+    background: rgba(0, 0, 0, 0.7);
+    border-color: #e50914;
+    color: #e50914;
+    transform: scale(1.1);
+}
+
+/* 컨트롤 바 하단 중앙에 배치 */
+.video-js .vjs-control-bar {
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.95), rgba(0, 0, 0, 0.85)) !important;
+    height: 70px !important;
+    padding: 0 30px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important; /* 중앙 정렬 */
+    z-index: 1000 !important;
+    position: absolute !important;
+    bottom: 30px !important; /* 하단에서 30px 위에 배치 */
+    left: 50% !important;
+    transform: translateX(-50%) !important; /* 수평 중앙 정렬 */
+    top: auto !important; /* top 제거 */
+    right: auto !important; /* right 제거 */
+    width: 600px !important; /* 고정 너비로 변경 */
+    max-width: 90% !important; /* 화면이 작을 때 대응 */
+    border-radius: 12px !important; /* 둥근 모서리 */
+    pointer-events: auto !important;
+    box-sizing: border-box !important; /* padding 포함 너비 계산 */
+    /* opacity, visibility는 vjs-user-active/inactive에서 제어 */
+}
+
+.video-js .vjs-progress-control {
+    position: absolute;
+    bottom: 70px;
+    left: 0;
+    right: 0;
+    height: 4px;
+}
+
+.video-js .vjs-progress-holder {
+    height: 4px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 0;
+}
+
+.video-js .vjs-play-progress {
+    background: #e50914;
+    border-radius: 0;
+}
+
+.video-js .vjs-load-progress {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.video-js .vjs-play-control {
+    font-size: 1.8rem;
+    color: #fff;
+    cursor: pointer;
+    padding: 0 10px;
+    opacity: 1 !important;
+}
+
+.video-js .vjs-play-control:hover {
+    color: #e50914;
+}
+
+/* 10초 앞으로/뒤로 버튼 스타일 */
+.video-js .vjs-seek-button {
+    color: #fff;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0 15px !important; /* 고정 패딩 */
+    opacity: 1 !important;
+    flex-shrink: 0 !important; /* 크기 고정 */
+    min-width: 50px !important;
+}
+
+.video-js .vjs-seek-button:hover {
+    color: #e50914;
+}
+
+.video-js .vjs-time-control {
+    color: #fff;
+    font-size: 0.9rem;
+    line-height: 70px;
+    padding: 0 15px !important; /* 고정 패딩 */
+    opacity: 1 !important;
+    flex-shrink: 0 !important; /* 크기 고정 */
+    min-width: 80px !important;
+    text-align: center !important;
+}
+
+.video-js .vjs-volume-control {
+    color: #fff;
+    padding: 0 15px !important; /* 고정 패딩 */
+    opacity: 1 !important;
+    flex-shrink: 0 !important; /* 크기 고정 */
+    min-width: 100px !important;
+}
+
+.video-js .vjs-volume-control:hover {
+    color: #e50914;
+}
+
+.video-js .vjs-fullscreen-control {
+    color: #fff;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0 15px !important; /* 고정 패딩 */
+    opacity: 1 !important;
+    flex-shrink: 0 !important; /* 크기 고정 */
+    min-width: 50px !important;
+}
+
+.video-js .vjs-fullscreen-control:hover {
+    color: #e50914;
+}
+
+/* 모든 컨트롤 버튼이 보이도록 */
+.video-js .vjs-control {
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* 중앙 재생/일시정지 버튼 */
+.center-play-button {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100px;
+    height: 100px;
+    background: rgba(0, 0, 0, 0.7);
+    border: 4px solid #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    color: #fff;
+    cursor: pointer;
+    z-index: 500;
+    transition: all 0.3s;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.center-play-button:hover {
+    background: rgba(0, 0, 0, 0.9);
+    border-color: #e50914;
+    color: #e50914;
+    transform: translate(-50%, -50%) scale(1.15);
+    box-shadow: 0 6px 30px rgba(229, 9, 20, 0.4);
+}
+
+/* 마우스 영역 (중앙 버튼 표시/숨김 감지) */
+.player-mouse-area {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    pointer-events: auto;
+}
+
+/* Theater 모드 스타일 */
+.theater-overlay {
+    position: fixed;
+    inset: 0;
+    background: #000;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+}
+
+.close-theater-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 10000;
+    background: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 700;
+    transition: all 0.3s;
+}
+
+.close-theater-btn:hover {
+    background: rgba(0, 0, 0, 0.8);
+    border-color: #e50914;
+    color: #e50914;
+}
+
+/* 스킵 컨트롤 개선 */
+.skip-controls {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    z-index: 5;
+    pointer-events: none;
+    padding: 0 40px;
+}
+
+.skip-controls button {
+    pointer-events: auto;
+    background: rgba(0, 0, 0, 0.5);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1.5rem;
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.3s;
+}
+
+.skip-controls:hover button {
+    opacity: 1;
+}
+
+.skip-controls button:hover {
+    background: rgba(0, 0, 0, 0.8);
+    border-color: #e50914;
+    color: #e50914;
+    transform: scale(1.1);
+}

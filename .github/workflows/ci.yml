@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - "feat/#*"
   workflow_dispatch:
 
 permissions:
@@ -11,9 +12,9 @@ permissions:
 
 env:
   AWS_REGION: ${{ secrets.AWS_REGION }}
-    #  S3_BUCKET: ${{ secrets.FRONTEND_S3_BUCKET }}
   S3_BUCKET: team-formation-lap-origin-s3
   BUILD_DIR: dist
+  CLOUDFRONT_DISTRIBUTION_ID: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}
 
 jobs:
   build-and-deploy:
@@ -34,6 +35,15 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'table'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '1'
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -46,3 +56,18 @@ jobs:
           echo "Deploying ${BUILD_DIR} -> s3://${S3_BUCKET}"
           aws s3 sync "${BUILD_DIR}" "s3://${S3_BUCKET}" --delete
 
+      - name: Invalidate CloudFront cache
+        if: env.CLOUDFRONT_DISTRIBUTION_ID != ''
+        run: |
+          echo "Invalidating CloudFront distribution: ${CLOUDFRONT_DISTRIBUTION_ID}"
+          INVALIDATION_ID=$(aws cloudfront create-invalidation \
+            --distribution-id ${CLOUDFRONT_DISTRIBUTION_ID} \
+            --paths "/*" \
+            --query 'Invalidation.Id' \
+            --output text)
+          echo "CloudFront invalidation created: ${INVALIDATION_ID}"
+          echo "Waiting for invalidation to complete..."
+          aws cloudfront wait invalidation-completed \
+            --distribution-id ${CLOUDFRONT_DISTRIBUTION_ID} \
+            --id ${INVALIDATION_ID}
+          echo "✅ CloudFront cache invalidation completed!"
