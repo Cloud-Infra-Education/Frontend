@@ -77,7 +77,7 @@ Frontend/
 
 ### API Base URL
 ```
-https://api.exampleott.click/api/v1
+https://api.formationp.com/api/v1
 ```
 
 ### 주요 API 엔드포인트
@@ -117,17 +117,54 @@ https://api.exampleott.click/api/v1
 
 ## 🔄 CI/CD 파이프라인
 
-GitHub Actions를 통한 자동 배포:
+GitHub Actions를 통한 자동 배포 파이프라인입니다.
 
-1. **Trivy 보안 스캔** - CRITICAL/HIGH 취약점 검사
-2. **Frontend 빌드** - Vite 빌드 실행
-3. **S3 업로드** - `team-formation-lap-origin-s3` 버킷에 배포
-4. **CloudFront 캐시 무효화** - 자동 캐시 삭제
+### 파이프라인 구조
+
+```
+GitHub → Trivy → GitHub Actions (Build) → S3 → CloudFront
+```
+
+### 워크플로우 단계
+
+1. **GitHub** (Checkout)
+   - 소스 코드 체크아웃
+
+2. **Trivy 보안 스캔** ⚠️
+   - CRITICAL/HIGH 심각도 취약점 검사
+   - 취약점 발견 시 빌드 중단 (exit-code: '1')
+   - **중요**: Build 단계 이전에 실행되어 보안 검증을 먼저 수행
+
+3. **GitHub Actions 내부 단계**
+   - **Setup Node.js** - Node.js 20 설정 및 npm 캐시
+   - **Install dependencies** - `npm ci` 실행 (의존성 설치)
+   - **Build** - Vite 프로덕션 빌드 실행 (`npm run build`)
+
+4. **AWS 설정**
+   - AWS 자격 증명 구성
+
+5. **S3 업로드**
+   - 빌드 결과물 (`dist/`)을 `team-formation-lap-origin-s3` 버킷에 동기화
+   - `--delete` 옵션으로 불필요한 파일 자동 제거
+
+6. **CloudFront 캐시 무효화**
+   - 모든 경로 (`/*`)에 대한 캐시 무효화 생성
+   - 무효화 완료까지 대기하여 즉시 배포 반영
 
 ### 워크플로우 트리거
+
 - `main` 브랜치 푸시
 - `feat/#*` 브랜치 푸시
-- 수동 실행 (workflow_dispatch)
+- 수동 실행 (`workflow_dispatch`)
+
+### 필요한 GitHub Secrets
+
+다음 secrets가 GitHub 저장소에 설정되어 있어야 합니다:
+
+- `AWS_ACCESS_KEY_ID` - AWS 액세스 키
+- `AWS_SECRET_ACCESS_KEY` - AWS 시크릿 키
+- `AWS_REGION` - AWS 리전 (예: `ap-northeast-2`)
+- `CLOUDFRONT_DISTRIBUTION_ID` - CloudFront 배포 ID
 
 ## 📦 주요 의존성
 
@@ -149,7 +186,7 @@ i18next를 사용한 다국어 지원 (한국어/영어)
 
 프로덕션 환경에서 다음 환경 변수가 필요합니다:
 
-- `VITE_API_BASE_URL` - Backend API 주소 (선택사항, 기본값: `https://api.exampleott.click/api/v1`)
+- `VITE_API_BASE_URL` - Backend API 주소 (선택사항, 기본값: `https://api.formationp.com/api/v1`)
 
 ## 📝 주요 작업 내역
 
@@ -173,9 +210,9 @@ i18next를 사용한 다국어 지원 (한국어/영어)
 
 ## 🔗 관련 링크
 
-- **Backend API 문서**: https://api.exampleott.click/docs
+- **프로덕션 사이트**: https://www.formationp.com
+- **Backend API 문서**: https://api.formationp.com/docs
 - **GitHub 저장소**: https://github.com/Cloud-Infra-Education/Frontend
-- **Swagger UI**: https://api.exampleott.click/docs
 
 ---
 
