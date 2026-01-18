@@ -54,6 +54,20 @@
     font-size: 1.1rem;
     font-weight: 700;
     margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.modal-rating-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 4px;
+    color: #fff;
+    font-size: 0.9rem;
+    font-weight: 700;
 }
 
 /* 5. 버튼 레이아웃 */

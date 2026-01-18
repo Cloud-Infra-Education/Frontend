@@ -1,8 +1,8 @@
 .login-overlay {
   position: fixed;
   inset: 0;
-  background: linear-gradient(rgba(4,7,20,0.9), rgba(4,7,20,0.9)), 
-              url('https://assets.nflxext.com/ffe/siteui/vlv3/f841d4c7-10e1-40af-bca1-07e3f8eb14af/615959b1-5b59-4db9-a00d-71844111979b/KR-ko-20220502-popsignuptwoweeks-perspective_alpha_website_large.jpg');
+  background: linear-gradient(135deg, rgba(4, 7, 20, 0.95) 0%, rgba(0, 119, 204, 0.3) 50%, rgba(4, 7, 20, 0.95) 100%),
+              radial-gradient(circle at 50% 50%, rgba(0, 212, 255, 0.1) 0%, transparent 70%);
   background-size: cover;
   display: flex;
   align-items: center;

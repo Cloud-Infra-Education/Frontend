@@ -250,7 +250,7 @@ const SmartPlayer = ({ src, region, contentData, initialTime, onProgressSave }) 
       const currentTime = player.currentTime();
       if (currentTime <= 0) return;
       localStorage.setItem(`save_time_${currentContentData.id}`, currentTime);
-      if (Math.floor(currentTime) >= lastSavedTimeRef.current + 10) {
+      if (Math.floor(currentTime) >= lastSavedTimeRef.current + 5) {
         lastSavedTimeRef.current = Math.floor(currentTime);
         if (onProgressSave) onProgressSave(currentContentData.id, currentTime);
       }

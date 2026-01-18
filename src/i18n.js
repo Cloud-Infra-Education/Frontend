@@ -18,7 +18,15 @@ i18n
           "info": "상세 정보",
           "recommend_title": "Formation+ 오리지널 & 추천",
           "search_placeholder": "제목, 캐릭터 또는 장르로 검색하세요",
-          "close": "닫기"
+          "close": "닫기",
+          "continue_watching": "시청 중인 콘텐츠",
+          "recommendations": "추천",
+          "search_results": "검색 결과",
+          "no_search_results": "검색 결과가 없습니다.",
+          "watch": "시청하기",
+          "like": "좋아요",
+          "people_like_this": "명이 이 콘텐츠를 좋아합니다",
+          "like_count": "like"
         }
       },
       en: {
@@ -32,7 +40,15 @@ i18n
           "info": "More Info",
           "recommend_title": "Formation+ Originals & Recommended",
           "search_placeholder": "Titles, characters, or genres",
-          "close": "Close"
+          "close": "Close",
+          "continue_watching": "Continue Watching",
+          "recommendations": "Recommendations",
+          "search_results": "Search Results",
+          "no_search_results": "No search results found.",
+          "watch": "Play",
+          "like": "Like",
+          "people_like_this": "people like this content",
+          "like_count": "like"
         }
       }
     },

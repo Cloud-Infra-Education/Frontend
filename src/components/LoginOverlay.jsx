@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import "./LoginOverlay.css";
 
 // [명세서 반영] 프로덕션 API 주소
-const API_BASE_URL = "https://api.exampleott.click/api/v1"; 
+const API_BASE_URL = "https://api.formationp.com/api/v1"; 
 
 export default function LoginOverlay({ onLogin, isLoading, onBypass }) {
   const [isRegisterMode, setIsRegisterMode] = useState(false);
@@ -97,17 +97,6 @@ export default function LoginOverlay({ onLogin, isLoading, onBypass }) {
             {isRegisterMode ? "로그인하러 가기" : "지금 가입하세요."}
           </p>
         </div>
-        
-        {onBypass && (
-          <button 
-            type="button" 
-            className="login-bypass-btn" 
-            onClick={onBypass}
-            title="서버 연결 없이 디자인 확인"
-          >
-            디자인 확인하기
-          </button>
-        )}
       </div>
     </div>
   );
