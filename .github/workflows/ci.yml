@@ -12,7 +12,7 @@ permissions:
 
 env:
   AWS_REGION: ${{ secrets.AWS_REGION }}
-  S3_BUCKET: team-formation-lap-origin-s3
+  S3_BUCKET: team-fmt-origin-s3
   BUILD_DIR: dist
   CLOUDFRONT_DISTRIBUTION_ID: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}
 

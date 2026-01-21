@@ -15,28 +15,46 @@ export default function LoginOverlay({ onLogin, isLoading, onBypass }) {
   const handleRegister = async () => {
     setIsSubmitting(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          password,
-          first_name: firstName,
-          last_name: lastName,
-          region_code: "KR",
-          subscription_status: "free"
-        }),
-      });
-
-      if (response.ok) {
-        alert("회원가입 성공! 가입하신 계정으로 로그인해 주세요.");
+      // localStorage에 회원가입 정보 저장 (한국식: 성 이름)
+      const userData = {
+        email,
+        password,
+        firstName,
+        lastName,
+        fullName: `${lastName}${firstName}`.trim() || email, // 한국식: 성 이름
+        registeredAt: new Date().toISOString()
+      };
+      
+      // 기존 사용자 목록 가져오기 (없으면 빈 배열)
+      const existingUsers = JSON.parse(localStorage.getItem("registeredUsers") || "[]");
+      
+      // 이미 가입된 이메일인지 확인
+      const existingUser = existingUsers.find(u => u.email === email);
+      if (existingUser) {
+        alert("이미 가입된 이메일입니다. 로그인해주세요.");
         setIsRegisterMode(false);
-      } else {
-        const error = await response.json();
-        alert(`가입 실패: ${error.detail || "정보를 확인해주세요."}`);
+        setFirstName("");
+        setLastName("");
+        setIsSubmitting(false);
+        return;
       }
+      
+      // 새 사용자 추가
+      existingUsers.push(userData);
+      localStorage.setItem("registeredUsers", JSON.stringify(existingUsers));
+      
+      // 환영 인사 표시
+      const fullName = userData.fullName;
+      alert(`환영합니다, ${fullName}님! 🎉\n\n회원가입이 완료되었습니다. 로그인해주세요.`);
+      
+      // 로그인 모드로 전환
+      setIsRegisterMode(false);
+      
+      // 입력 필드 초기화 (이메일과 비밀번호는 유지)
+      setFirstName("");
+      setLastName("");
     } catch (err) {
-      alert("서버 연결에 실패했습니다.");
+      alert("오류가 발생했습니다.");
     } finally {
       setIsSubmitting(false);
     }

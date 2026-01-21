@@ -13,11 +13,11 @@ export default function ContentModal({ content, onClose, onPlay, onLike }) {
     // 영어일 때 특정 제목에 대해 다른 메타 정보 표시
     if (i18n.language === 'en') {
       if (content.title === '우리들의 일그러진 영웅' || content.title === 'Our Twisted Hero') {
-        return 'The total audience 1992 ‧ drama ‧ 1 hour 58 minutes';
+        return 'Overall audience + | 1992 · Drama · 1 hour 58 minutes';
       } else if (content.title === '무한도전' || content.title === 'Infinite Challenge') {
-        return '12 years of age or older 1992 ‧ Entertainment ‧ Completion';
+        return '12 years of age or older | 1992 · Entertainment · Completion';
       } else if (content.title === 'tiny') {
-        return 'The total audience Free test ‧ promotional video';
+        return 'Overall audience | Free test · promotional video';
       }
     }
     
@@ -51,29 +51,53 @@ export default function ContentModal({ content, onClose, onPlay, onLike }) {
           
           <div className="modal-meta-info">
             {metaDisplay ? (
-              // meta_display 형식: "전체관람가 1992년 ‧ 드라마 ‧ 1시간 58분" 또는 "The total audience 1992 ‧ drama ‧ 1 hour 58 minutes"
+              // meta_display 형식: "전체관람가 1992년 ‧ 드라마 ‧ 1시간 58분" 또는 "Overall audience + | 1992 · Drama · 1 hour 58 minutes | 120 minutes"
               (() => {
-                const parts = metaDisplay.split(' ');
-                // 영어의 경우 특정 패턴에 따라 처리
-                let rating, rest;
-                if (metaDisplay.startsWith('The total audience')) {
-                  rating = 'The total audience'; // "The total audience"
-                  rest = parts.slice(3).join(' '); // 나머지 부분
-                } else if (metaDisplay.startsWith('12 years of age or older')) {
-                  rating = '12 years of age or older'; // "12 years of age or older"
-                  rest = parts.slice(5).join(' '); // 나머지 부분
-                } else {
-                  rating = parts[0]; // "전체관람가", "12세이상" 등 한 단어
-                  rest = parts.slice(1).join(' '); // 나머지 부분
+                // 영어일 때는 | 구분자로 파싱
+                if (i18n.language === 'en' && metaDisplay.includes('|')) {
+                  const parts = metaDisplay.split('|').map(p => p.trim());
+                  return (
+                    <>
+                      <span className="modal-rating-badge">{parts[0]}</span> {parts[1]} {parts[2] ? `| ${parts[2]}` : ''}
+                    </>
+                  );
                 }
-                return (
-                  <>
-                    <span className="modal-rating-badge">{rating}</span> {rest}
-                  </>
-                );
+                
+                // 한국어일 때는 기존 로직 사용
+                // "전체관람가 1992년 ‧ 드라마 ‧ 1시간 58분" 형식 또는 "전체관람가+ | 1992년 ‧ 드라마 ‧ 1시간 58분 | 120 minutes" 형식
+                if (metaDisplay.includes('|')) {
+                  // | 구분자가 있으면 파싱
+                  const parts = metaDisplay.split('|').map(p => p.trim());
+                  return (
+                    <>
+                      <span className="modal-rating-badge">{parts[0]}</span> {parts[1]} {parts[2] ? `| ${parts[2]}` : ''}
+                    </>
+                  );
+                } else {
+                  // | 구분자가 없으면 기존 로직 (하위 호환성)
+                  const parts = metaDisplay.split(' ');
+                  let rating, rest;
+                  if (metaDisplay.startsWith('전체관람가')) {
+                    rating = '전체관람가+';
+                    rest = parts.slice(1).join(' ') + ' | 120 minutes';
+                  } else if (metaDisplay.startsWith('12세이상')) {
+                    rating = '12세이상';
+                    rest = parts.slice(1).join(' ');
+                  } else {
+                    rating = parts[0];
+                    rest = parts.slice(1).join(' ');
+                  }
+                  return (
+                    <>
+                      <span className="modal-rating-badge">{rating}</span> {rest}
+                    </>
+                  );
+                }
               })()
             ) : (
-              `${content.age_rating}+ | ${content.meta || '2026'} | 120분`
+              i18n.language === 'en' 
+                ? `${content.age_rating}+ | ${content.meta || '2026'} | 120 minutes`
+                : `${content.age_rating}+ | ${content.meta || '2026'} | 120분`
             )}
           </div>
 
