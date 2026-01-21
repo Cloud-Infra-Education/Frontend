@@ -439,6 +439,33 @@ export default function App() {
     }).join('');
   };
 
+  // 영문 키보드를 한글 자모로 변환 (한국어 모드일 때)
+  const convertEnglishToKorean = (text) => {
+    if (i18n.language !== 'ko') return text;
+    
+    // 한글 키보드 레이아웃에 따른 영문 → 한글 자모 변환 매핑
+    const englishToKorean = {
+      // 자음
+      'r': 'ㄱ', 'R': 'ㄲ', 's': 'ㄴ', 'e': 'ㄷ', 'E': 'ㄸ',
+      'f': 'ㄹ', 'a': 'ㅁ', 'q': 'ㅂ', 'Q': 'ㅃ', 't': 'ㅅ',
+      'T': 'ㅆ', 'd': 'ㅇ', 'w': 'ㅈ', 'W': 'ㅉ', 'c': 'ㅊ',
+      'z': 'ㅋ', 'x': 'ㅌ', 'v': 'ㅍ', 'g': 'ㅎ',
+      // 모음
+      'k': 'ㅏ', 'o': 'ㅐ', 'i': 'ㅑ', 'O': 'ㅒ',
+      'j': 'ㅓ', 'p': 'ㅔ', 'u': 'ㅕ', 'P': 'ㅖ',
+      'h': 'ㅗ', 'y': 'ㅛ', 'n': 'ㅜ', 'b': 'ㅠ',
+      'm': 'ㅡ', 'l': 'ㅣ'
+    };
+    
+    return text.split('').map(char => {
+      if (englishToKorean[char]) {
+        return englishToKorean[char];
+      }
+      // 이미 한글이거나 다른 문자인 경우 그대로 유지
+      return char;
+    }).join('');
+  };
+
   // 검색 기능 - 프론트엔드에서 displayMovies 필터링
   const handleSearch = (query) => {
     if (!query.trim()) {
@@ -637,6 +664,16 @@ export default function App() {
                       // 영어 모드일 때 한글 자모를 영문으로 자동 변환
                       if (i18n.language === 'en') {
                         const converted = convertKoreanToEnglish(value);
+                        if (converted !== value) {
+                          // 변환된 값으로 업데이트
+                          value = converted;
+                          // input 값 직접 설정
+                          e.target.value = value;
+                        }
+                      } 
+                      // 한국어 모드일 때 영문 키보드를 한글 자모로 자동 변환
+                      else if (i18n.language === 'ko') {
+                        const converted = convertEnglishToKorean(value);
                         if (converted !== value) {
                           // 변환된 값으로 업데이트
                           value = converted;
