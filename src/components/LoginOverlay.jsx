@@ -1,10 +1,12 @@
 import React, { useState } from "react";
+import { useTranslation } from 'react-i18next';
 import "./LoginOverlay.css";
 
 // [명세서 반영] 프로덕션 API 주소
 const API_BASE_URL = "https://api.formationp.com/api/v1"; 
 
 export default function LoginOverlay({ onLogin, isLoading, onBypass }) {
+  const { i18n } = useTranslation();
   const [isRegisterMode, setIsRegisterMode] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -46,6 +48,10 @@ export default function LoginOverlay({ onLogin, isLoading, onBypass }) {
       // 환영 인사 표시
       const fullName = userData.fullName;
       alert(`환영합니다, ${fullName}님! 🎉\n\n회원가입이 완료되었습니다. 로그인해주세요.`);
+      
+      // 회원가입 후 언어를 한국어로 설정
+      i18n.changeLanguage('ko');
+      localStorage.setItem('i18nextLng', 'ko');
       
       // 로그인 모드로 전환
       setIsRegisterMode(false);

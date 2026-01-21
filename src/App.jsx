@@ -322,6 +322,12 @@ export default function App() {
           registeredAt: user.registeredAt
         }));
         
+        // 새로 가입한 사용자의 경우 언어를 한국어로 설정 (이미 설정되어 있으면 유지)
+        if (!localStorage.getItem('i18nextLng')) {
+          i18n.changeLanguage('ko');
+          localStorage.setItem('i18nextLng', 'ko');
+        }
+        
         localStorage.setItem("accessToken", token);
         setToken(token);
         window.location.reload();
@@ -480,11 +486,15 @@ export default function App() {
     try {
       // displayMovies 배열에서 제목에 검색어가 포함된 항목 찾기 (부분 일치)
       // 언어별로 검색: 영어 모드에서는 영어 제목으로, 한국어 모드에서는 한국어 제목으로 검색
-      const searchQuery = query.trim().toLowerCase();
+      const trimmedQuery = query.trim();
+      // 한국어 모드에서는 대소문자 변환 없이 그대로 사용, 영어 모드에서만 소문자 변환
+      const searchQuery = i18n.language === 'ko' ? trimmedQuery : trimmedQuery.toLowerCase();
       const filteredResults = displayMovies.filter(movie => {
         // 현재 언어에 맞는 제목으로 검색
-        const movieTitle = getTitle(movie.title || '').toLowerCase();
-        return movieTitle.includes(searchQuery);
+        const movieTitle = getTitle(movie.title || '');
+        // 한국어 모드에서는 대소문자 변환 없이 검색, 영어 모드에서만 소문자 변환
+        const titleToSearch = i18n.language === 'ko' ? movieTitle : movieTitle.toLowerCase();
+        return titleToSearch.includes(searchQuery);
       });
       
       console.log(`[Search] 검색어: "${query}" → 결과: ${filteredResults.length}개`);
@@ -661,19 +671,12 @@ export default function App() {
                     placeholder={i18n.language === 'en' ? 'Search...' : '검색...'}
                     value={searchQuery}
                     onCompositionStart={() => {
-                      // IME 조합 시작
                       setIsComposing(true);
                     }}
-                    onCompositionUpdate={(e) => {
-                      // IME 조합 중 (한글 입력 중)
-                      // 조합 중일 때는 아무것도 하지 않음
-                    }}
                     onCompositionEnd={(e) => {
-                      // IME 조합 완료 (한글 입력 완료)
                       setIsComposing(false);
                       const value = e.target.value;
                       setSearchQuery(value);
-                      // 조합 완료 후에만 검색 실행
                       if (value.trim()) {
                         handleSearch(value);
                       } else {
@@ -682,55 +685,41 @@ export default function App() {
                       }
                     }}
                     onChange={(e) => {
-                      let value = e.target.value;
+                      const value = e.target.value;
                       
-                      // IME 조합 중일 때는 onChange에서 아무것도 하지 않음
+                      // IME 조합 중일 때는 값만 업데이트하고 검색은 하지 않음
                       if (isComposing) {
                         setSearchQuery(value);
                         return;
                       }
                       
                       // 영어 모드일 때만 한글 자모를 영문으로 자동 변환
+                      let finalValue = value;
                       if (i18n.language === 'en') {
                         const converted = convertKoreanToEnglish(value);
                         if (converted !== value) {
-                          // 변환된 값으로 업데이트
-                          value = converted;
-                          // input 값 직접 설정
-                          e.target.value = value;
+                          finalValue = converted;
+                          // input 값 직접 설정 (영어 모드에서만)
+                          e.target.value = finalValue;
                         }
                       }
                       
-                      // 한국어 모드에서는 변환하지 않고 그대로 사용
-                      setSearchQuery(value);
-                      if (value.trim()) {
-                        handleSearch(value);
+                      setSearchQuery(finalValue);
+                      if (finalValue.trim()) {
+                        handleSearch(finalValue);
                       } else {
                         setSearchResults([]);
                         setIsSearchMode(false);
                       }
                     }}
                     onFocus={(e) => {
-                      // 언어에 따라 IME 모드 자동 설정
+                      // 언어에 따라 기본 속성만 설정
                       if (i18n.language === 'en') {
                         e.target.setAttribute('lang', 'en');
                         e.target.setAttribute('inputmode', 'latin');
-                        // 영어 모드일 때 IME 비활성화 (자동으로 영어 입력 모드)
-                        e.target.style.imeMode = 'disabled';
-                        // 추가: composition 모드 방지
-                        setTimeout(() => {
-                          if (e.target && document.activeElement === e.target) {
-                            // 포커스를 다시 주어 IME 모드 재설정
-                            e.target.blur();
-                            e.target.focus();
-                          }
-                        }, 50);
                       } else {
                         e.target.setAttribute('lang', 'ko');
                         e.target.setAttribute('inputmode', 'text');
-                        // 한국어 모드일 때 IME 활성화 (자동으로 한글 입력 모드)
-                        e.target.style.imeMode = 'active';
-                        setIsComposing(false);
                       }
                     }}
                     autoFocus
@@ -752,7 +741,20 @@ export default function App() {
                   // 검색 모드가 열릴 때 언어에 맞게 IME 모드 자동 설정
                   setTimeout(() => {
                     if (searchInputRef.current) {
-                      if (i18n.language === 'en') {
+                      // 회원가입한 사용자는 한국어로 고정
+                      const savedLanguage = localStorage.getItem('i18nextLng');
+                      const isKoreanUser = savedLanguage === 'ko' || i18n.language === 'ko';
+                      
+                      if (isKoreanUser) {
+                        // 한국어 모드로 강제 설정
+                        searchInputRef.current.setAttribute('lang', 'ko');
+                        searchInputRef.current.setAttribute('inputmode', 'text');
+                        searchInputRef.current.style.imeMode = 'active';
+                        // 언어도 한국어로 설정
+                        if (i18n.language !== 'ko') {
+                          i18n.changeLanguage('ko');
+                        }
+                      } else if (i18n.language === 'en') {
                         searchInputRef.current.setAttribute('lang', 'en');
                         searchInputRef.current.setAttribute('inputmode', 'latin');
                         searchInputRef.current.style.imeMode = 'disabled';
