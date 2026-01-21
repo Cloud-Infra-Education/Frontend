@@ -41,15 +41,17 @@ export default function App() {
   const [isLanguageOpen, setIsLanguageOpen] = useState(false); // 언어 선택 드롭다운 열림 상태
   const dropdownRef = useRef(null);
   const languageDropdownRef = useRef(null);
+  const searchInputRef = useRef(null);
 
   const displayMovies = movies.length > 0 ? movies : [
     { 
       id: 't1', 
       title: '우리 생애 최고의 순간', 
-      description: '수민님의 모든 요청이 반영된 최종 버전입니다.', 
+      description: '국가대표 여자핸드볼 팀의 화려한 부활을 위해 과거 영광의 주역이었던 선수들이 한데 모인다. 개성 강한 선수들은 서로 싸우며 불화를 일으키는 등, 단합에 어려움을 겪는다. 우여곡절 끝에 각자의 복잡한 인생의 사정을 안고 있는 선수들은 서로를 받아들이고, 끈끈한 팀워크로 뭉치기 시작한다.', 
       thumbnail_url: '/thumbnails/우리 생애 최고의 순간.jpg', 
-      age_rating: '15+', 
-      meta: '2026 • SF',
+      age_rating: '전체관람가', 
+      meta: '2008년 ‧ 스포츠/드라마 ‧ 2시간 4분',
+      meta_display: '전체관람가 | 2008년 ‧ 스포츠/드라마 ‧ 2시간 4분',
       like_count: 0
     },
     { 
@@ -65,10 +67,11 @@ export default function App() {
     { 
       id: 't3', 
       title: '우리들의 행복한 시간', 
-      description: '오분순삭 모음집, 무한도전 다시 보기', 
+      description: '오분순삭 모음집, 무한도전 다시 보기 => 유정은 세 번째 자살 시도 이후 고모 모니카 수녀와 함께 봉사활동으로 구치소로 가게 된다. 그 곳에서 모니카 수녀와 자신을 매몰차게 밀어내는 사형수 정윤수를 만나게 되고, 정윤수는 유정이 어릴 적 애국가를 불렀던 가수였음을 알게 된다.', 
       thumbnail_url: '/thumbnails/우리들의 행복한 시간.jpg', 
-      age_rating: '12세이상', 
-      meta: '1992년 ‧ 예능 ‧ 완결',
+      age_rating: '15세이상', 
+      meta: '2006년 ‧ 로맨스/드라마 ‧ 2시간',
+      meta_display: '15세 이상 관람가 | 2006년 ‧ 로맨스/드라마 ‧ 2시간',
       like_count: 0
     }
   ];
@@ -391,6 +394,51 @@ export default function App() {
     console.log(`[Video] ✅ 영상 재생 설정 완료!`);
   };
 
+  // 언어에 따라 제목 다르게 표시
+  const getTitle = (title) => {
+    if (i18n.language === 'en') {
+      if (title === '우리 생애 최고의 순간') {
+        return 'Forever the Moment';
+      } else if (title === '우리들의 일그러진 영웅') {
+        return 'Our Twisted Hero';
+      } else if (title === '우리들의 행복한 시간') {
+        return 'Our Happy Time';
+      } else if (title === '무한도전') {
+        return 'Infinite Challenge';
+      }
+    }
+    return title;
+  };
+
+  // 한글 자모를 영문 키보드로 변환 (영어 모드일 때)
+  const convertKoreanToEnglish = (text) => {
+    if (i18n.language !== 'en') return text;
+    
+    // 한글 키보드 레이아웃에 따른 영문 변환 매핑
+    const koreanToEnglish = {
+      // 자음
+      'ㄱ': 'r', 'ㄲ': 'R', 'ㄴ': 's', 'ㄷ': 'e', 'ㄸ': 'E',
+      'ㄹ': 'f', 'ㅁ': 'a', 'ㅂ': 'q', 'ㅃ': 'Q', 'ㅅ': 't',
+      'ㅆ': 'T', 'ㅇ': 'd', 'ㅈ': 'w', 'ㅉ': 'W', 'ㅊ': 'c',
+      'ㅋ': 'z', 'ㅌ': 'x', 'ㅍ': 'v', 'ㅎ': 'g',
+      // 모음
+      'ㅏ': 'k', 'ㅐ': 'o', 'ㅑ': 'i', 'ㅒ': 'O',
+      'ㅓ': 'j', 'ㅔ': 'p', 'ㅕ': 'u', 'ㅖ': 'P',
+      'ㅗ': 'h', 'ㅘ': 'hk', 'ㅙ': 'ho', 'ㅚ': 'hl',
+      'ㅛ': 'y', 'ㅜ': 'n', 'ㅝ': 'nj', 'ㅞ': 'np',
+      'ㅟ': 'nl', 'ㅠ': 'b', 'ㅡ': 'm', 'ㅢ': 'ml',
+      'ㅣ': 'l'
+    };
+    
+    return text.split('').map(char => {
+      if (koreanToEnglish[char]) {
+        return koreanToEnglish[char];
+      }
+      // 완성된 한글인 경우 처리하지 않음 (영어 키보드로 변환할 수 없음)
+      return char;
+    }).join('');
+  };
+
   // 검색 기능 - 프론트엔드에서 displayMovies 필터링
   const handleSearch = (query) => {
     if (!query.trim()) {
@@ -403,9 +451,11 @@ export default function App() {
     
     try {
       // displayMovies 배열에서 제목에 검색어가 포함된 항목 찾기 (부분 일치)
+      // 언어별로 검색: 영어 모드에서는 영어 제목으로, 한국어 모드에서는 한국어 제목으로 검색
       const searchQuery = query.trim().toLowerCase();
       const filteredResults = displayMovies.filter(movie => {
-        const movieTitle = (movie.title || '').toLowerCase();
+        // 현재 언어에 맞는 제목으로 검색
+        const movieTitle = getTitle(movie.title || '').toLowerCase();
         return movieTitle.includes(searchQuery);
       });
       
@@ -466,6 +516,30 @@ export default function App() {
       if (introTimer) clearTimeout(introTimer);
     };
   }, [token]); // initializeData 의존성 제거 (무한 루프 방지)
+
+  // 언어 변경 시 검색 입력창의 IME 모드 자동 설정
+  useEffect(() => {
+    if (searchInputRef.current && isSearchMode) {
+      if (i18n.language === 'en') {
+        searchInputRef.current.setAttribute('lang', 'en');
+        searchInputRef.current.setAttribute('inputmode', 'latin');
+        searchInputRef.current.style.imeMode = 'disabled';
+      } else {
+        searchInputRef.current.setAttribute('lang', 'ko');
+        searchInputRef.current.setAttribute('inputmode', 'text');
+        searchInputRef.current.style.imeMode = 'active';
+      }
+      // IME 모드를 재설정하기 위해 focus/blur (자동으로 영어/한글 모드로 전환)
+      if (document.activeElement === searchInputRef.current) {
+        searchInputRef.current.blur();
+        setTimeout(() => {
+          if (searchInputRef.current) {
+            searchInputRef.current.focus();
+          }
+        }, 50);
+      }
+    }
+  }, [i18n.language, isSearchMode]);
 
   // 시청 중인 콘텐츠 (중복 제거)
   const continuingMoviesMap = new Map();
@@ -552,17 +626,52 @@ export default function App() {
               {isSearchMode ? (
                 <div className="search-input-wrapper">
                   <input
+                    ref={searchInputRef}
                     type="text"
                     className="search-input"
-                    placeholder="검색..."
+                    lang={i18n.language === 'en' ? 'en' : 'ko'}
+                    placeholder={i18n.language === 'en' ? 'Search...' : '검색...'}
                     value={searchQuery}
                     onChange={(e) => {
-                      setSearchQuery(e.target.value);
-                      if (e.target.value.trim()) {
-                        handleSearch(e.target.value);
+                      let value = e.target.value;
+                      // 영어 모드일 때 한글 자모를 영문으로 자동 변환
+                      if (i18n.language === 'en') {
+                        const converted = convertKoreanToEnglish(value);
+                        if (converted !== value) {
+                          // 변환된 값으로 업데이트
+                          value = converted;
+                          // input 값 직접 설정
+                          e.target.value = value;
+                        }
+                      }
+                      setSearchQuery(value);
+                      if (value.trim()) {
+                        handleSearch(value);
                       } else {
                         setSearchResults([]);
                         setIsSearchMode(false);
+                      }
+                    }}
+                    onFocus={(e) => {
+                      // 언어에 따라 IME 모드 자동 설정
+                      if (i18n.language === 'en') {
+                        e.target.setAttribute('lang', 'en');
+                        e.target.setAttribute('inputmode', 'latin');
+                        // 영어 모드일 때 IME 비활성화 (자동으로 영어 입력 모드)
+                        e.target.style.imeMode = 'disabled';
+                        // 추가: composition 모드 방지
+                        setTimeout(() => {
+                          if (e.target && document.activeElement === e.target) {
+                            // 포커스를 다시 주어 IME 모드 재설정
+                            e.target.blur();
+                            e.target.focus();
+                          }
+                        }, 50);
+                      } else {
+                        e.target.setAttribute('lang', 'ko');
+                        e.target.setAttribute('inputmode', 'text');
+                        // 한국어 모드일 때 IME 활성화 (자동으로 한글 입력 모드)
+                        e.target.style.imeMode = 'active';
                       }
                     }}
                     autoFocus
@@ -579,7 +688,25 @@ export default function App() {
                   </button>
                 </div>
               ) : (
-                <div className="search-icon-btn" onClick={() => setIsSearchMode(true)}>
+                <div className="search-icon-btn" onClick={() => {
+                  setIsSearchMode(true);
+                  // 검색 모드가 열릴 때 언어에 맞게 IME 모드 자동 설정
+                  setTimeout(() => {
+                    if (searchInputRef.current) {
+                      if (i18n.language === 'en') {
+                        searchInputRef.current.setAttribute('lang', 'en');
+                        searchInputRef.current.setAttribute('inputmode', 'latin');
+                        searchInputRef.current.style.imeMode = 'disabled';
+                      } else {
+                        searchInputRef.current.setAttribute('lang', 'ko');
+                        searchInputRef.current.setAttribute('inputmode', 'text');
+                        searchInputRef.current.style.imeMode = 'active';
+                      }
+                      // 포커스를 주어 IME 모드 활성화
+                      searchInputRef.current.focus();
+                    }
+                  }, 100);
+                }}>
                   <Icons.Search />
                 </div>
               )}
@@ -657,9 +784,9 @@ export default function App() {
                     </div>
                     <div className="dropdown-divider"></div>
                     <div className="dropdown-info-row">
-                      <div><span className="info-label">접속 리전:</span> <span className="info-value">{userRegion}</span></div>
+                      <div><span className="info-label">{i18n.language === 'en' ? 'Region:' : '접속 리전:'}</span> <span className="info-value">{userRegion}</span></div>
                       <div>
-                        <span className="info-label">가입 일시:</span>
+                        <span className="info-label">{i18n.language === 'en' ? 'Sign-up Date:' : '가입 일시:'}</span>
                         <span className="info-value">
                           {userData?.created_at 
                             ? new Date(userData.created_at).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, '. ').replace(/\.$/, '.')
@@ -675,7 +802,7 @@ export default function App() {
                       </div>
                     </div>
                     <div className="dropdown-divider"></div>
-                    <div className="dropdown-item" onClick={() => {localStorage.removeItem("accessToken"); window.location.reload();}}>Formation+에서 로그아웃</div>
+                    <div className="dropdown-item" onClick={() => {localStorage.removeItem("accessToken"); window.location.reload();}}>{i18n.language === 'en' ? 'Log Out' : 'Formation+에서 로그아웃'}</div>
                   </div>
                 )}
               </div>
@@ -702,7 +829,7 @@ export default function App() {
                               onClick={() => setSelectedMovie(item)}
                             >
                               <div className="thumbnail-overlay">
-                                <div className="thumbnail-title">{item.title}</div>
+                                <div className="thumbnail-title">{getTitle(item.title)}</div>
                                 <div className="thumbnail-like">❤️ {item.like_count || 0}</div>
                               </div>
                             </div>
@@ -719,7 +846,7 @@ export default function App() {
                 ) : !searchQuery ? (
                   <div className="search-empty">
                     <p style={{ color: '#888', fontSize: '1.2rem', textAlign: 'center', padding: '3rem' }}>
-                      검색어를 입력해주세요
+                      {i18n.language === 'en' ? 'Search for something...' : '검색어를 입력해주세요'}
                     </p>
                   </div>
                 ) : (
@@ -760,7 +887,7 @@ export default function App() {
                       <div key={s.id} className={`hero-slide ${idx === currentIdx ? 'active' : ''}`} style={{ backgroundImage: `url(${thumbnailUrl})` }}>
                         <div className="hero-overlay">
                           <div className="hero-content">
-                            <h1 className="hero-title">{s.title}</h1>
+                            <h1 className="hero-title">{getTitle(s.title)}</h1>
                             <div className="hero-btns">
                               <button 
                                 className="play-btn" 
@@ -797,7 +924,7 @@ export default function App() {
                             onClick={() => setSelectedMovie(movie)}
                           >
                             <div className="thumbnail-overlay">
-                              <div className="thumbnail-title">{movie.title}</div>
+                              <div className="thumbnail-title">{getTitle(movie.title)}</div>
                             </div>
                             <div className="progress-bar-container">
                               <div className="progress-bar-fill" style={{ width: `${Math.min((movie.last_played_time / (movie.duration || 3600)) * 100, 100)}%` }}></div>
@@ -812,7 +939,7 @@ export default function App() {
                 {/* 추천 콘텐츠 */}
                 {movies.length > 0 && (
                   <section className="content-row">
-                    <h3 className="row-title">추천</h3>
+                    <h3 className="row-title">{i18n.language === 'en' ? 'Recommended' : '추천'}</h3>
                     <div className="content-row-wrapper">
                       <div className="content-row-content">
                         {movies.map(item => {
@@ -825,7 +952,7 @@ export default function App() {
                               onClick={() => setSelectedMovie(item)}
                             >
                               <div className="thumbnail-overlay">
-                                <div className="thumbnail-title">{item.title}</div>
+                                <div className="thumbnail-title">{getTitle(item.title)}</div>
                                 <div className="thumbnail-like">❤️ {item.like_count || 0}</div>
                               </div>
                             </div>

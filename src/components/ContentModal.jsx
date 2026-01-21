@@ -12,8 +12,12 @@ export default function ContentModal({ content, onClose, onPlay, onLike }) {
     
     // 영어일 때 특정 제목에 대해 다른 메타 정보 표시
     if (i18n.language === 'en') {
-      if (content.title === '우리들의 일그러진 영웅' || content.title === 'Our Twisted Hero') {
-        return 'Overall audience + | 1992 · Drama · 1 hour 58 minutes';
+      if (content.title === '우리 생애 최고의 순간' || content.title === 'Forever the Moment') {
+        return 'All Audiences | 2008 · Sports/Drama · 2 hours 4 minutes';
+      } else if (content.title === '우리들의 일그러진 영웅' || content.title === 'Our Twisted Hero') {
+        return 'All Audiences | 1992 · Drama · 1 hour 58 minutes';
+      } else if (content.title === '우리들의 행복한 시간' || content.title === 'Our Happy Time') {
+        return 'Rated 15 and over | 2006 · Romance/Drama · 2 hours';
       } else if (content.title === '무한도전' || content.title === 'Infinite Challenge') {
         return '12 years of age or older | 1992 · Entertainment · Completion';
       } else if (content.title === 'tiny') {
@@ -28,8 +32,12 @@ export default function ContentModal({ content, onClose, onPlay, onLike }) {
   const getDescription = () => {
     // 영어일 때 특정 제목에 대해 다른 설명 표시
     if (i18n.language === 'en') {
-      if (content.title === '우리들의 일그러진 영웅' || content.title === 'Our Twisted Hero') {
-        return 'In his 40s, Han Byeong-tae hears the obituary of his teacher. He recalls the past when he felt absurd power in a small classroom 30 years ago when he heard that Um Seok-dae, who was the chief of staff when he was a child, was coming to a commercial house.';
+      if (content.title === '우리 생애 최고의 순간' || content.title === 'Forever the Moment') {
+        return "In an effort to revive the national women's handball team, former star players from its glory days are brought together once again. Each player has a strong personality, and frequent conflicts make unity difficult to achieve. After many ups and downs, the players—each carrying the weight of their own complicated lives—gradually accept one another and begin to come together as a tightly bonded team.";
+      } else if (content.title === '우리들의 일그러진 영웅' || content.title === 'Our Twisted Hero') {
+        return "Now in his forties, Han Byeong-tae hears of his former teacher's death, which brings back memories of his childhood. Thirty years earlier, in a small elementary school classroom, he witnessed the absurd and oppressive power wielded by Um Seok-dae, the class president who ruled his classmates through fear and obedience.";
+      } else if (content.title === '우리들의 행복한 시간' || content.title === 'Our Happy Time') {
+        return 'After her third suicide attempt, Yujeong goes to a detention center as part of a volunteer program with her aunt, Sister Monica. There, she meets Jung Yunsu, a death row inmate who coldly pushes her away. Yujeong later realizes that Yunsu is the singer who once sang the national anthem when she was a child.';
       }
     }
     
@@ -39,6 +47,22 @@ export default function ContentModal({ content, onClose, onPlay, onLike }) {
   
   const metaDisplay = getMetaDisplay();
   const description = getDescription();
+  
+  // 언어에 따라 제목 다르게 표시
+  const getTitle = () => {
+    if (i18n.language === 'en') {
+      if (content.title === '우리 생애 최고의 순간') {
+        return 'Forever the Moment';
+      } else if (content.title === '우리들의 일그러진 영웅') {
+        return 'Our Twisted Hero';
+      } else if (content.title === '우리들의 행복한 시간') {
+        return 'Our Happy Time';
+      } else if (content.title === '무한도전') {
+        return 'Infinite Challenge';
+      }
+    }
+    return content.title;
+  };
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -47,7 +71,7 @@ export default function ContentModal({ content, onClose, onPlay, onLike }) {
         <button className="modal-close-btn" onClick={onClose}>✕</button>
         
         <div className="modal-inner-body">
-          <h2 className="modal-title">{content.title}</h2>
+          <h2 className="modal-title">{getTitle()}</h2>
           
           <div className="modal-meta-info">
             {metaDisplay ? (
@@ -68,9 +92,10 @@ export default function ContentModal({ content, onClose, onPlay, onLike }) {
                 if (metaDisplay.includes('|')) {
                   // | 구분자가 있으면 파싱
                   const parts = metaDisplay.split('|').map(p => p.trim());
+                  // parts[2]는 "120 minutes"이므로 한국어에서는 표시하지 않음
                   return (
                     <>
-                      <span className="modal-rating-badge">{parts[0]}</span> {parts[1]} {parts[2] ? `| ${parts[2]}` : ''}
+                      <span className="modal-rating-badge">{parts[0]}</span> {parts[1]}
                     </>
                   );
                 } else {
@@ -79,10 +104,13 @@ export default function ContentModal({ content, onClose, onPlay, onLike }) {
                   let rating, rest;
                   if (metaDisplay.startsWith('전체관람가')) {
                     rating = '전체관람가+';
-                    rest = parts.slice(1).join(' ') + ' | 120 minutes';
+                    rest = parts.slice(1).join(' ');
                   } else if (metaDisplay.startsWith('12세이상')) {
                     rating = '12세이상';
                     rest = parts.slice(1).join(' ');
+                  } else if (metaDisplay.startsWith('15세 이상 관람가')) {
+                    rating = '15세 이상 관람가';
+                    rest = parts.slice(3).join(' ');
                   } else {
                     rating = parts[0];
                     rest = parts.slice(1).join(' ');
