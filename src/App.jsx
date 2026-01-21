@@ -39,6 +39,7 @@ export default function App() {
   const [searchResults, setSearchResults] = useState([]); // 검색 결과
   const [isSearching, setIsSearching] = useState(false); // 검색 중 상태
   const [isLanguageOpen, setIsLanguageOpen] = useState(false); // 언어 선택 드롭다운 열림 상태
+  const [isComposing, setIsComposing] = useState(false); // IME 조합 중 상태
   const dropdownRef = useRef(null);
   const languageDropdownRef = useRef(null);
   const searchInputRef = useRef(null);
@@ -659,9 +660,37 @@ export default function App() {
                     lang={i18n.language === 'en' ? 'en' : 'ko'}
                     placeholder={i18n.language === 'en' ? 'Search...' : '검색...'}
                     value={searchQuery}
+                    onCompositionStart={() => {
+                      // IME 조합 시작
+                      setIsComposing(true);
+                    }}
+                    onCompositionUpdate={(e) => {
+                      // IME 조합 중 (한글 입력 중)
+                      // 조합 중일 때는 아무것도 하지 않음
+                    }}
+                    onCompositionEnd={(e) => {
+                      // IME 조합 완료 (한글 입력 완료)
+                      setIsComposing(false);
+                      const value = e.target.value;
+                      setSearchQuery(value);
+                      // 조합 완료 후에만 검색 실행
+                      if (value.trim()) {
+                        handleSearch(value);
+                      } else {
+                        setSearchResults([]);
+                        setIsSearchMode(false);
+                      }
+                    }}
                     onChange={(e) => {
                       let value = e.target.value;
-                      // 영어 모드일 때 한글 자모를 영문으로 자동 변환
+                      
+                      // IME 조합 중일 때는 onChange에서 아무것도 하지 않음
+                      if (isComposing) {
+                        setSearchQuery(value);
+                        return;
+                      }
+                      
+                      // 영어 모드일 때만 한글 자모를 영문으로 자동 변환
                       if (i18n.language === 'en') {
                         const converted = convertKoreanToEnglish(value);
                         if (converted !== value) {
@@ -670,17 +699,9 @@ export default function App() {
                           // input 값 직접 설정
                           e.target.value = value;
                         }
-                      } 
-                      // 한국어 모드일 때 영문 키보드를 한글 자모로 자동 변환
-                      else if (i18n.language === 'ko') {
-                        const converted = convertEnglishToKorean(value);
-                        if (converted !== value) {
-                          // 변환된 값으로 업데이트
-                          value = converted;
-                          // input 값 직접 설정
-                          e.target.value = value;
-                        }
                       }
+                      
+                      // 한국어 모드에서는 변환하지 않고 그대로 사용
                       setSearchQuery(value);
                       if (value.trim()) {
                         handleSearch(value);
@@ -709,6 +730,7 @@ export default function App() {
                         e.target.setAttribute('inputmode', 'text');
                         // 한국어 모드일 때 IME 활성화 (자동으로 한글 입력 모드)
                         e.target.style.imeMode = 'active';
+                        setIsComposing(false);
                       }
                     }}
                     autoFocus
